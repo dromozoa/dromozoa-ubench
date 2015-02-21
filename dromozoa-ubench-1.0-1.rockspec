@@ -13,6 +13,6 @@ description = {
 build = {
   type = "builtin";
   modules = {
-    ["dromozoa.ubench"] = "dromozoa/ubench.c";
+    ["dromozoa.ubench.impl"] = "dromozoa/ubench/impl.c";
   };
 }

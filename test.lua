@@ -1,4 +1,4 @@
-local ubench = require "dromozoa.ubench"
+local ubench = require "dromozoa.ubench.impl"
 
 assert(ubench.RUSAGE_SELF)
 assert(ubench.RUSAGE_CHILDREN)
