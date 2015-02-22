@@ -21,6 +21,18 @@ function timeval_to_number(self)
   return self.tv_sec + self.tv_usec * 0.000001
 end
 
+function timeval_to_string(self)
+  local s = self.tv_sec
+  local u = self.tv_usec
+  if s < 0 then
+    if u > 0 then
+      s = s + 1
+      u = 1000000 - u
+    end
+  end
+  return string.format("%d.%06d", s, u)
+end
+
 function metatable.__add(a, b)
   if type(a) == "number" then
     return a + timeval_to_number(b)
@@ -83,18 +95,10 @@ function metatable.__le(a, b)
   end
 end
 
-function metatable:__tostring()
-  local s = self.tv_sec
-  local u = self.tv_usec
-  if s < 0 then
-    if u > 0 then
-      s = s + 1
-      u = 1000000 - u
-    end
-  end
-  return string.format("%d.%06d", s, u)
-end
+metatable.__tostring = timeval_to_string
 
 return function (self)
+  self.to_number = timeval_to_number
+  self.to_string = timeval_to_string
   return setmetatable(self, metatable)
 end

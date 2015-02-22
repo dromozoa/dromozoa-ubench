@@ -41,3 +41,5 @@ assert(tv1 >= tv0)
 assert(tostring(tv0) == "0.000000")
 assert(tostring(tv1) == "1.250000")
 assert(tostring(tv2) == "-1.250000")
+
+assert(tv1:to_string() == "1.250000")
