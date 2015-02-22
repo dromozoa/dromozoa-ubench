@@ -63,14 +63,14 @@ static int impl_gettimeofday(lua_State* L) {
   }
 }
 
-static const luaL_Reg impl[] = {
+static const luaL_Reg module[] = {
   { "getrusage", impl_getrusage },
   { "gettimeofday", impl_gettimeofday },
   { },
 };
 
-int luaopen_dromozoa_ubench_impl(lua_State* L) {
-  luaL_newlib(L, impl);
+int luaopen_dromozoa_ubench(lua_State* L) {
+  luaL_newlib(L, module);
   lua_pushinteger(L, RUSAGE_SELF);
   lua_setfield(L, -2, "RUSAGE_SELF");
   lua_pushinteger(L, RUSAGE_CHILDREN);
