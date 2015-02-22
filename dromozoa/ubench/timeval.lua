@@ -17,19 +17,45 @@
 
 local metatable = {}
 
+function timeval_to_number(self)
+  return self.tv_sec + self.tv_usec * 0.000001
+end
+
 function metatable.__add(a, b)
-  local s = a.tv_sec + b.tv_sec
-  local u = a.tv_usec + b.tv_usec
-  if u >= 1000000 then
-    s = s + 1
-    u = u - 1000000
+  if type(a) == "number" then
+    return a + timeval_to_number(b)
+  elseif type(b) == "number" then
+    return timeval_to_number(a) + b
+  else
+    local s = a.tv_sec + b.tv_sec
+    local u = a.tv_usec + b.tv_usec
+    if u >= 1000000 then
+      s = s + 1
+      u = u - 1000000
+    end
+    return setmetatable({ tv_sec = s; tv_usec = u }, metatable)
   end
-  return setmetatable({ tv_sec = s; tv_usec = u }, metatable)
 end
 
 function metatable.__sub(a, b)
-  local s = a.tv_sec - b.tv_sec
-  local u = a.tv_usec - b.tv_usec
+  if type(a) == "number" then
+    return a - timeval_to_number(b)
+  elseif type(b) == "number" then
+    return timeval_to_number(a) - b
+  else
+    local s = a.tv_sec - b.tv_sec
+    local u = a.tv_usec - b.tv_usec
+    if u < 0 then
+      s = s - 1
+      u = u + 1000000
+    end
+    return setmetatable({ tv_sec = s; tv_usec = u }, metatable)
+  end
+end
+
+function metatable:__unm()
+  local s = -self.tv_sec
+  local u = -self.tv_usec
   if u < 0 then
     s = s - 1
     u = u + 1000000
@@ -57,8 +83,16 @@ function metatable.__le(a, b)
   end
 end
 
-function metatable.__tostring(self)
-  return string.format("%d.%06d", self.tv_sec, self.tv_usec)
+function metatable:__tostring()
+  local s = self.tv_sec
+  local u = self.tv_usec
+  if s < 0 then
+    if u > 0 then
+      s = s + 1
+      u = 1000000 - u
+    end
+  end
+  return string.format("%d.%06d", s, u)
 end
 
 return function (self)
