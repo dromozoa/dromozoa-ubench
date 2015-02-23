@@ -19,10 +19,16 @@ local ubench = require "dromozoa.ubench"
 local tarai = require "dromozoa.ubench.tarai"
 local timeval = require "dromozoa.ubench.timeval"
 
+--[[
+マイクロ秒単位で経過時間を計測する
+N=1000回試行すると、
+]]
+
 function run()
   -- 64 - 448
   -- C = 8
   -- 1/(C*2) (C-1)/(C*2)
+  -- 1/16 7/16
 
   local N = 1024
   local R1 = 64
@@ -52,6 +58,11 @@ function run()
 
   table.sort(total)
 
+  for i = 1, N do
+    print(total[i])
+  end
+
+--[[
   local a = 0
   for i = R1, R2 do
     a = a + total[i]
@@ -65,6 +76,7 @@ function run()
   b = b ^ 0.5
 
   print(string.format("%.6f %.1f%%", a, b * 100))
+]]
 end
 
 run()
