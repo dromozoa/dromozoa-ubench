@@ -15,21 +15,15 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local ubench = require "dromozoa.ubench"
+local gettimeofday = require "dromozoa.ubench.gettimeofday"
 local timeval = require "dromozoa.ubench.timeval"
 local tarai = require "dromozoa.ubench.tarai"
 
-assert(ubench.RUSAGE_SELF)
-assert(ubench.RUSAGE_CHILDREN)
 
-local tv1 = ubench.gettimeofday()
-local ru1 = ubench.getrusage(ubench.RUSAGE_SELF)
+local tv1 = gettimeofday()
 
-tarai(8, 4, 0)
+tarai(10, 5, 0)
 
-local tv2 = ubench.gettimeofday()
-local ru2 = ubench.getrusage(ubench.RUSAGE_SELF)
+local tv2 = gettimeofday()
 
 print("tv", timeval(tv2) - timeval(tv1))
-print("ut", timeval(ru2.ru_utime) - timeval(ru1.ru_utime))
-print("st", timeval(ru2.ru_stime) - timeval(ru1.ru_stime))

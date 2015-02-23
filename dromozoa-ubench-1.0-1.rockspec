@@ -13,7 +13,7 @@ description = {
 build = {
   type = "builtin";
   modules = {
-    ["dromozoa.ubench.impl"] = "dromozoa/ubench/impl.c";
+    ["dromozoa.ubench.gettimeofday"] = "dromozoa/ubench/gettimeofday.c";
     ["dromozoa.ubench.tarai"] = "dromozoa/ubench/tarai.lua";
     ["dromozoa.ubench.timeval"] = "dromozoa/ubench/timeval.lua";
   };
