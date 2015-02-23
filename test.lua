@@ -15,15 +15,15 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local gettimeofday = require "dromozoa.ubench.gettimeofday"
-local timeval = require "dromozoa.ubench.timeval"
+local ubench = require "dromozoa.ubench"
 local tarai = require "dromozoa.ubench.tarai"
 
-
-local tv1 = gettimeofday()
-
-tarai(10, 5, 0)
-
-local tv2 = gettimeofday()
-
-print("tv", timeval(tv2) - timeval(tv1))
+local b = ubench()
+b:add("identity", function (ctx) return ctx end)
+b:add("increment", function (ctx) return ctx + 1 end, 0)
+b:add("decrement", function (ctx) return ctx - 1 end, 0)
+b:add("tarai(2,1,0)", function (ctx, ...) return ctx, tarai(...) end, 0, 2, 1, 0)
+b:add("tarai(4,2,0)", function (ctx, ...) return ctx, tarai(...) end, 0, 4, 2, 0)
+b:add("tarai(6,3,0)", function (ctx, ...) return ctx, tarai(...) end, 0, 6, 3, 0)
+b:add("tarai(8,4,0)", function (ctx, ...) return ctx, tarai(...) end, 0, 8, 4, 0)
+b:run()
