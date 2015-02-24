@@ -24,16 +24,13 @@ local unpack = table.unpack
 
 local function ubench_run(n, fn, ctx, ...)
   collectgarbage("collect")
-  collectgarbage("stop")
+  collectgarbage("collect")
 
   local t1 = gettimeofday()
   for i = 1, n do
     ctx = fn(ctx, ...)
   end
   local t2 = gettimeofday()
-
-  collectgarbage("collect")
-  collectgarbage("restart")
 
   local s = t2.tv_sec - t1.tv_sec
   local u = t2.tv_usec - t1.tv_usec
@@ -44,22 +41,17 @@ local function ubench_run(n, fn, ctx, ...)
   return s * 1000000 + u
 end
 
-local function ubench_cycle(u, fn, ctx, ...)
+local function ubench_n(u, fn, ctx, ...)
   local a = u * 0.9
   local b = u * 1.1
   local n = 1
   while true do
     local t = ubench_run(n, fn, ctx, ...)
-    if a <= t and t < b then
-      return n
-    end
+    if t < 1 then t = 1 end
+    if a <= t and t < b then return n end
     local m = floor(n * u / t)
-    if m < 1 then
-      m = 1
-    end
-    if n == m then
-      return n
-    end
+    if m < 1 then m = 1 end
+    if n == m then return n end
     n = m
   end
 end
@@ -71,7 +63,7 @@ return function ()
   }
 
   function self:add(name, fn, ...)
-    local cycle = ubench_cycle(1000, fn, ...)
+    local cycle = ubench_n(1000, fn, ...)
     io.stderr:write(format("bench[%q].cycle = %d\n", name, cycle))
 
     local bench = self._bench
