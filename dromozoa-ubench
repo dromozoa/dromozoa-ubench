@@ -18,6 +18,7 @@
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
 local ubench = require "dromozoa.ubench"
+local nanosleep = require "dromozoa.ubench.nanosleep"
 
 local format = string.format
 
@@ -39,12 +40,10 @@ local result, message = pcall(function ()
     command[#command + 1] = quote(arg[i])
   end
   local command = table.concat(command, " ")
-
   for i = 1, 10 do
     assert(os.execute(command))
-    assert(os.execute("sleep 1"))
+    assert(nanosleep { tv_sec = 1; tv_nsec = 0 })
   end
-
   ubench():merge(filename)
 end)
 
