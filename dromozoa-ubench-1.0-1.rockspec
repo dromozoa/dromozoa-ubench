@@ -19,4 +19,9 @@ build = {
     ["dromozoa.ubench.nanosleep"] = "dromozoa/ubench/nanosleep.c";
     ["dromozoa.ubench.tarai"] = "dromozoa/ubench/tarai.lua";
   };
+  install = {
+    bin = {
+      ["dromozoa-ubench"] = "dromozoa-ubench";
+    };
+  };
 }
