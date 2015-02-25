@@ -18,6 +18,7 @@
 local gettimeofday = require "dromozoa.ubench.gettimeofday"
 
 local format = string.format
+local concat = table.concat
 local unpack = table.unpack or unpack
 
 local function run1(n, fn, ctx, ...)
@@ -72,7 +73,8 @@ local function estimate(u, fn, ctx, ...)
     local t = run1(n, fn, ctx, ...)
     if t < 1 then t = 1 end
     if a <= t and t < b then return n end
-    local m = math.floor(n * u / t)
+    local m = n * u / t
+    m = m - m % 1
     if m < 1 then m = 1 end
     if n == m then return n end
     n = m
@@ -84,10 +86,8 @@ local function to_human_readable_duration(u)
     return format("%6.2f nsec", u * 1000)
   elseif u < 1000 then
     return format("%6.2f usec", u)
-  elseif u < 1000000 then
-    return format("%6.2f msec", u * 0.001)
   else
-    return format("%6.2f sec ", u * 0.000001)
+    return format("%6.2f msec", u * 0.001)
   end
 end
 
@@ -107,7 +107,6 @@ return function ()
 
   function self:run()
     local filename = os.getenv "DROMOZOA_UBENCH_FILENAME"
-
     local out = io.stderr
     local result = {}
 
@@ -118,11 +117,12 @@ return function ()
       local n = #v.name
       if m < n then m = n end
     end
-
-    local hr = ""
-    for i = 1, m do hr = hr .. "-" end
     out:write(format("| %-" .. m .. "s |     average |  std/avg |\n", "name"))
-    out:write(format("|:%-" .. m .. "s | -----------:| --------:|\n", hr))
+
+    local hr = {}
+    for i = 1, m do hr[i] = "-" end
+    out:write(format("|:%-" .. m .. "s | -----------:| --------:|\n", concat(hr)))
+
     for i = 1, #bench do
       local v = bench[i]
       local n = estimate(1000, v.fn, unpack(v.arg))
@@ -136,7 +136,7 @@ return function ()
     end
     out:write("\n")
 
-    if filename ~= nil then
+    if filename then
       local out = assert(io.open(filename, "a"))
       for i = 1, #result do
         local v = result[i]
@@ -152,13 +152,14 @@ return function ()
 
     local handle = assert(io.open(filename))
     for line in handle:lines() do
-      local i, name, avg = assert(line:match("^(%d+)\t([^\t]+)\t([^\t]+)$"))
-      local i = tonumber(i)
-      local avg = tonumber(avg)
-      if result[i] == nil then
+      local i, name, avg = line:match("^(%d+)\t([^\t]+)\t([^\t]+)$")
+      i = tonumber(i)
+      avg = tonumber(avg)
+      local t = result[i]
+      if not t then
         result[i] = { name = name; data = { avg } }
       else
-        local data = result[i].data
+        local data = t.data
         data[#data + 1] = avg
       end
     end
@@ -183,10 +184,10 @@ return function ()
       v.avg = avg
     end
 
-    local hr = ""
-    for i = 1, m do hr = hr .. "-" end
+    local hr = {}
+    for i = 1, m do hr[i] = "-" end
     out:write(format("| %-" .. m .. "s |     minimum |     average |     maximum |\n", "name"))
-    out:write(format("| %-" .. m .. "s | -----------:| -----------:| -----------:|\n", hr))
+    out:write(format("| %-" .. m .. "s | -----------:| -----------:| -----------:|\n", concat(hr)))
     for i = 1, #result do
       local v = result[i]
       out:write(format("| %-" .. m .. "s | %s | %s | %s |\n", v.name, to_human_readable_duration(v.min), to_human_readable_duration(v.avg), to_human_readable_duration(v.max)))
