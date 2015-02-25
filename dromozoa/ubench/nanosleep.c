@@ -19,30 +19,41 @@
 
 #include <errno.h>
 #include <string.h>
-#include <sys/time.h>
+#include <time.h>
 
 #include <lua.h>
 #include <lualib.h>
+#include <lauxlib.h>
 
-static int impl_gettimeofday(lua_State* L) {
-  struct timeval tv = {};
-  if (gettimeofday(&tv, 0) != -1) {
-    lua_newtable(L);
-    lua_pushinteger(L, tv.tv_sec);
-    lua_setfield(L, -2, "tv_sec");
-    lua_pushinteger(L, tv.tv_usec);
-    lua_setfield(L, -2, "tv_usec");
+static int impl_nanosleep(lua_State* L) {
+  struct timespec tv1 = {};
+  struct timespec tv2 = {};
+
+  lua_getfield(L, 1, "tv_sec");
+  tv1.tv_sec = luaL_checkinteger(L, -1);
+  lua_pop(L, 1);
+  lua_getfield(L, 1, "tv_nsec");
+  tv1.tv_nsec = luaL_checkinteger(L, -1);
+  lua_pop(L, 1);
+
+  if (nanosleep(&tv1, &tv2) != -1) {
+    lua_pushinteger(L, 0);
     return 1;
   } else {
     int code = errno;
     lua_pushnil(L);
-    lua_pushfstring(L, "could not gettimeofday: %s", strerror(code));
+    lua_pushfstring(L, "could not nanosleep: %s", strerror(code));
     lua_pushinteger(L, code);
-    return 3;
+    lua_newtable(L);
+    lua_pushinteger(L, tv2.tv_sec);
+    lua_setfield(L, -2, "tv_sec");
+    lua_pushinteger(L, tv2.tv_nsec);
+    lua_setfield(L, -2, "tv_nsec");
+    return 4;
   }
 }
 
-int luaopen_dromozoa_ubench_gettimeofday(lua_State* L) {
-  lua_pushcfunction(L, impl_gettimeofday);
+int luaopen_dromozoa_ubench_nanosleep(lua_State* L) {
+  lua_pushcfunction(L, impl_nanosleep);
   return 1;
 }
