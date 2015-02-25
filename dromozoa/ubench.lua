@@ -81,13 +81,13 @@ end
 
 local function to_human_readable_duration(u)
   if u < 1 then
-    return u * 1000, "nsec"
+    return format("%6.2f nsec", u * 1000)
   elseif u < 1000 then
-    return u, "usec"
+    return format("%6.2f usec", u)
   elseif u < 1000000 then
-    return u * 0.001, "msec"
+    return format("%6.2f msec", u * 0.001)
   else
-    return u * 0.000001, "sec"
+    return format("%6.2f sec ", u * 0.000001)
   end
 end
 
@@ -132,9 +132,7 @@ return function ()
         avg = avg;
         std = std;
       }
-      local a, b = to_human_readable_duration(avg)
-      local c = std / avg * 100
-      out:write(format("| %-" .. m .. "s | %6.2f %-4s | %6.2f %% |\n", v.name, a, b, c))
+      out:write(format("| %-" .. m .. "s | %s | %6.2f %% |\n", v.name, to_human_readable_duration(avg), std / avg * 100))
     end
     out:write("\n")
 
@@ -191,10 +189,7 @@ return function ()
     out:write(format("| %-" .. m .. "s | -----------:| -----------:| -----------:|\n", hr))
     for i = 1, #result do
       local v = result[i]
-      local min_a, min_b = to_human_readable_duration(v.min)
-      local avg_a, avg_b = to_human_readable_duration(v.avg)
-      local max_a, max_b = to_human_readable_duration(v.max)
-      out:write(format("| %-" .. m .. "s | %6.2f %-4s | %6.2f %-4s | %6.2f %-4s |\n", v.name, min_a, min_b, avg_a, avg_b, max_a, max_b))
+      out:write(format("| %-" .. m .. "s | %s | %s | %s |\n", v.name, to_human_readable_duration(v.min), to_human_readable_duration(v.avg), to_human_readable_duration(v.max)))
     end
     out:write("\n")
   end
