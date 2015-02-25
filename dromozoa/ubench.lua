@@ -119,17 +119,10 @@ return function ()
       if m < n then m = n end
     end
 
-    local fmt = "| %-" .. m .. "s | %5.1f %-4s | %6.2f %% |\n"
-    local hr = "+"
-    for i = 1, #format(fmt, "", 1, "sec", 1) - 3 do
-      hr = hr .. "-"
-    end
-    hr = hr .. "+\n"
-
-    out:write(hr)
-    out:write(format("| %-" .. m .. "s | average    | std/avg  |\n", "name"))
-    out:write(hr)
-
+    local hr = ""
+    for i = 1, m do hr = hr .. "-" end
+    out:write(format("| %-" .. m .. "s |     average |  std/avg |\n", "name"))
+    out:write(format("|:%-" .. m .. "s | -----------:| --------:|\n", hr))
     for i = 1, #bench do
       local v = bench[i]
       local n = estimate(1000, v.fn, unpack(v.arg))
@@ -141,10 +134,8 @@ return function ()
       }
       local a, b = to_human_readable_duration(avg)
       local c = std / avg * 100
-      out:write(format(fmt, v.name, a, b, c))
+      out:write(format("| %-" .. m .. "s | %6.2f %-4s | %6.2f %% |\n", v.name, a, b, c))
     end
-
-    out:write(hr)
     out:write("\n")
 
     if filename ~= nil then
@@ -194,26 +185,17 @@ return function ()
       v.avg = avg
     end
 
-    local fmt = "| %-" .. m .. "s | %5.1f %-4s | %5.1f %-4s | %5.1f %-4s |\n"
-    local hr = "+"
-    for i = 1, #format(fmt, "", 1, "sec", 1, "sec", 1, "sec") - 3 do
-      hr = hr .. "-"
-    end
-    hr = hr .. "+\n"
-
-    out:write(hr)
-    out:write(format("| %-" .. m .. "s | minimum    | average    | maximum    |\n", "name"))
-    out:write(hr)
-
+    local hr = ""
+    for i = 1, m do hr = hr .. "-" end
+    out:write(format("| %-" .. m .. "s |     minimum |     average |     maximum |\n", "name"))
+    out:write(format("| %-" .. m .. "s | -----------:| -----------:| -----------:|\n", hr))
     for i = 1, #result do
       local v = result[i]
       local min_a, min_b = to_human_readable_duration(v.min)
       local avg_a, avg_b = to_human_readable_duration(v.avg)
       local max_a, max_b = to_human_readable_duration(v.max)
-      out:write(format(fmt, v.name, min_a, min_b, avg_a, avg_b, max_a, max_b))
+      out:write(format("| %-" .. m .. "s | %6.2f %-4s | %6.2f %-4s | %6.2f %-4s |\n", v.name, min_a, min_b, avg_a, avg_b, max_a, max_b))
     end
-
-    out:write(hr)
     out:write("\n")
   end
 
