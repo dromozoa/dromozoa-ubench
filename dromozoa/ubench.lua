@@ -17,14 +17,12 @@
 
 local gettimeofday = require "dromozoa.ubench.gettimeofday"
 
-local collectgarbage = collectgarbage
-local floor = math.floor
 local format = string.format
-local unpack = table.unpack
+local unpack = table.unpack or unpack
 
-local function ubench_run(n, fn, ctx, ...)
-  collectgarbage("collect")
-  collectgarbage("collect")
+local function run1(n, fn, ctx, ...)
+  collectgarbage()
+  collectgarbage()
 
   local t1 = gettimeofday()
   for i = 1, n do
@@ -41,71 +39,182 @@ local function ubench_run(n, fn, ctx, ...)
   return s * 1000000 + u
 end
 
-local function ubench_n(u, fn, ctx, ...)
+local function run2(m, n, fn, ...)
+  local data = {}
+  for i = 1, m do
+    data[i] = run1(n, fn, ...) / n
+  end
+  table.sort(data)
+
+  local a = math.floor(m / 8)
+  local b = math.floor(m * 3 / 8)
+  local avg = 0
+  for i = a, b do
+    avg = avg + data[i]
+  end
+  avg = avg / (b - a)
+
+  local std = 0
+  for i = a, b do
+    std = std + (data[i] - avg) ^ 2
+  end
+  std = std / (b - a)
+  std = std ^ 0.5
+
+  return avg, std
+end
+
+local function estimate(u, fn, ctx, ...)
   local a = u * 0.9
   local b = u * 1.1
   local n = 1
   while true do
-    local t = ubench_run(n, fn, ctx, ...)
+    local t = run1(n, fn, ctx, ...)
     if t < 1 then t = 1 end
     if a <= t and t < b then return n end
-    local m = floor(n * u / t)
+    local m = math.floor(n * u / t)
     if m < 1 then m = 1 end
     if n == m then return n end
     n = m
   end
 end
 
+local function to_human_readable_duration(u)
+  if u < 1 then
+    return u * 1000, "nsec"
+  elseif u < 1000 then
+    return u, "usec"
+  elseif u < 1000000 then
+    return u * 0.001, "msec"
+  else
+    return u * 0.000001, "sec"
+  end
+end
+
 return function ()
   local self = {
     _bench = {};
-    _n = 1000;
   }
 
   function self:add(name, fn, ...)
-    local cycle = ubench_n(1000, fn, ...)
-    io.stderr:write(format("bench[%q].cycle = %d\n", name, cycle))
-
     local bench = self._bench
     bench[#bench + 1] = {
       name = name;
       fn = fn;
       arg = {...};
-      cycle = cycle;
     }
   end
 
   function self:run()
-    for i = 1, #self._bench do
-      local v = self._bench[i]
-      io.stderr:write(format("running[%q]...\n", v.name))
-      local data = {}
-      for j = 1, self._n do
-        data[j] = ubench_run(v.cycle, v.fn, unpack(v.arg))
-      end
+    local filename = os.getenv "DROMOZOA_UBENCH_FILENAME"
 
-      table.sort(data)
+    local out = io.stderr
+    local result = {}
 
-      local a = math.max(math.floor(#data * 1 / 8), 1)
-      local b = math.max(math.floor(#data * 3 / 8), 1)
-      assert(a < b)
-      local x = 0
-      for i = a, b do
-        x = x + data[i]
-      end
-      x = x / (b - a)
-
-      local y = 0
-      for i = a, b do
-        y = y + (data[i] - x) ^ 2
-      end
-      y = y / (b - a)
-      y = y ^ 0.5
-
-      local z = y / x * 100
-      local x = x / v.cycle
-      io.write(format("%9.4f %5.2f%%\n", x, z))
+    local bench = self._bench
+    local m = 0
+    for i = 1, #bench do
+      local v = bench[i]
+      local n = #v.name
+      if m < n then m = n end
     end
+
+    local fmt = "| %-" .. m .. "s | %5.1f %-4s | %6.2f %% |\n"
+    local hr = "+"
+    for i = 1, #format(fmt, "", 1, "sec", 1) - 3 do
+      hr = hr .. "-"
+    end
+    hr = hr .. "+\n"
+
+    out:write(hr)
+    out:write(format("| %-" .. m .. "s | average    | std/avg  |\n", "name"))
+    out:write(hr)
+
+    for i = 1, #bench do
+      local v = bench[i]
+      local n = estimate(1000, v.fn, unpack(v.arg))
+      local avg, std = run2(1000, n, v.fn, unpack(v.arg))
+      result[i] = {
+        name = v.name;
+        avg = avg;
+        std = std;
+      }
+      local a, b = to_human_readable_duration(avg)
+      local c = std / avg * 100
+      out:write(format(fmt, v.name, a, b, c))
+    end
+
+    out:write(hr)
+    out:write("\n")
+
+    if filename ~= nil then
+      local out = assert(io.open(filename, "a"))
+      for i = 1, #result do
+        local v = result[i]
+        out:write(format("%d\t%s\t%.17g\n", i, v.name, v.avg))
+      end
+      out:close()
+    end
+  end
+
+  function self:merge(filename)
+    local out = io.stderr
+    local result = {}
+
+    local handle = assert(io.open(filename))
+    for line in handle:lines() do
+      local i, name, avg = assert(line:match("^(%d+)\t([^\t]+)\t([^\t]+)$"))
+      local i = tonumber(i)
+      local avg = tonumber(avg)
+      if result[i] == nil then
+        result[i] = { name = name; data = { avg } }
+      else
+        local data = result[i].data
+        data[#data + 1] = avg
+      end
+    end
+    handle:close()
+
+    local m = 0
+    for i = 1, #result do
+      local v = result[i]
+      local n = #v.name
+      if m < n then m = n end
+
+      local data = v.data
+      table.sort(data)
+      v.min = data[1]
+      v.max = data[#data]
+
+      local avg = 0
+      for i = 1, #data do
+        avg = avg + data[i]
+      end
+      avg = avg / #data
+      v.avg = avg
+    end
+
+    local fmt = "| %-" .. m .. "s | %5.1f %-4s | %5.1f %-4s | %5.1f %-4s |\n"
+    local hr = "+"
+    for i = 1, #format(fmt, "", 1, "sec", 1, "sec", 1, "sec") - 3 do
+      hr = hr .. "-"
+    end
+    hr = hr .. "+\n"
+
+    out:write(hr)
+    out:write(format("| %-" .. m .. "s | minimum    | average    | maximum    |\n", "name"))
+    out:write(hr)
+
+    for i = 1, #result do
+      local v = result[i]
+      local min_a, min_b = to_human_readable_duration(v.min)
+      local avg_a, avg_b = to_human_readable_duration(v.avg)
+      local max_a, max_b = to_human_readable_duration(v.max)
+      out:write(format(fmt, v.name, min_a, min_b, avg_a, avg_b, max_a, max_b))
+    end
+
+    out:write(hr)
+    out:write("\n")
   end
 
   return self

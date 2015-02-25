@@ -1,0 +1,55 @@
+#! /usr/bin/env lua
+
+-- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+--
+-- This file is part of dromozoa-ubench.
+--
+-- dromozoa-ubench is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- dromozoa-ubench is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
+
+local ubench = require "dromozoa.ubench"
+
+local format = string.format
+
+local Q = [[']]
+local E = [[\']]
+local QEQ = [['\'']]
+local EQQ = [[\''']]
+local QQE = [[''\']]
+
+local function quote(v)
+  return ((Q .. v:gsub(Q, QEQ) .. Q):gsub(EQQ, E):gsub(QQE, E))
+end
+
+local filename = assert(os.tmpname())
+
+local result, message = pcall(function ()
+  local command = { "env", quote("DROMOZOA_UBENCH_FILENAME=" .. filename) }
+  for i = 1, #arg do
+    command[#command + 1] = quote(arg[i])
+  end
+  local command = table.concat(command, " ")
+
+  for i = 1, 10 do
+    assert(os.execute(command))
+    assert(os.execute("sleep 1"))
+  end
+
+  ubench():merge(filename)
+end)
+
+os.remove(filename)
+
+if not result then
+  error(message)
+end
