@@ -404,4 +404,33 @@ return function (b)
       return ctx
     end
   end, 42)
+
+  b:add("cycle256.while", function (ctx)
+    local i = 1
+    while i < 256 do
+      ctx = ctx + i
+      i = i + 1
+    end
+    return ctx
+  end, 0)
+
+  b:add("cycle256.for", function (ctx)
+    for i = 1, 256 do
+      ctx = ctx + i
+    end
+    return ctx
+  end, 0)
+
+  do
+    local function f(ctx, i)
+      if i <= 256 then
+        return f(ctx + i, i + 1)
+      else
+        return ctx
+      end
+    end
+    b:add("cycle256.tail_call", function (ctx)
+      return f(ctx, 1)
+    end, 0)
+  end
 end
