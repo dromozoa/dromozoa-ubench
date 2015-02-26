@@ -17,6 +17,7 @@
 
 return function (b)
   local math_floor = math.floor
+  local math_pow = math.pow
   local math_sin = math.sin
   local string_byte = string.byte
   local table_concat = table.concat
@@ -433,4 +434,34 @@ return function (b)
       return f(ctx, 1)
     end, 0)
   end
+
+  if math_pow then
+    b:add("pow2.math_pow", function (ctx)
+      return math_pow(ctx, 2)
+    end, 0)
+  end
+
+  b:add("pow2.operator", function (ctx)
+    return ctx ^ 2
+  end, 0)
+
+  b:add("pow2.mul", function (ctx)
+    return ctx * ctx
+  end, 0)
+
+  if math_pow then
+    b:add("pow16.math_pow", function (ctx)
+      return math_pow(ctx, 16)
+    end, 0)
+  end
+
+  b:add("pow16.operator", function (ctx)
+    return ctx ^ 16
+  end, 0)
+
+  b:add("pow16.mul", function (ctx)
+    local v = ctx * ctx
+    v = v * v
+    return v * v
+  end, 0)
 end

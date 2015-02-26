@@ -20,19 +20,20 @@ local gettimeofday = require "dromozoa.ubench.gettimeofday"
 local format = string.format
 local concat = table.concat
 local unpack = table.unpack or unpack
+local sort = table.sort
 
 local function run1(n, fn, ctx, ...)
   collectgarbage()
   collectgarbage()
 
-  local t1 = gettimeofday()
+  local tv1 = gettimeofday()
   for i = 1, n do
     ctx = fn(ctx, ...)
   end
-  local t2 = gettimeofday()
+  local tv2 = gettimeofday()
 
-  local s = t2.tv_sec - t1.tv_sec
-  local u = t2.tv_usec - t1.tv_usec
+  local s = tv2.tv_sec - tv1.tv_sec
+  local u = tv2.tv_usec - tv1.tv_usec
   if u < 0 then
     s = s - 1
     u = u + 1000000
@@ -45,21 +46,26 @@ local function run2(m, n, fn, ...)
   for i = 1, m do
     data[i] = run1(n, fn, ...) / n
   end
-  table.sort(data)
+  sort(data)
 
-  local a = math.floor(m / 8)
-  local b = math.floor(m * 3 / 8)
+  local a = m / 8
+  local b = a * 3
+  a = a - a % 1
+  b = b - b % 1
+  local c = b - a
+
   local avg = 0
   for i = a, b do
     avg = avg + data[i]
   end
-  avg = avg / (b - a)
+  avg = avg / c
 
   local std = 0
   for i = a, b do
-    std = std + (data[i] - avg) ^ 2
+    local v = data[i] - avg
+    std = std + v * v
   end
-  std = std / (b - a)
+  std = std / c
   std = std ^ 0.5
 
   return avg, std
@@ -172,7 +178,7 @@ return function ()
       if m < n then m = n end
 
       local data = v.data
-      table.sort(data)
+      sort(data)
       v.min = data[1]
       v.max = data[#data]
 
