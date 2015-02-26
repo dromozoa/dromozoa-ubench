@@ -152,8 +152,7 @@ return function ()
     end
   end
 
-  function self:merge(filename)
-    local out = io.stderr
+  function self:merge(filename, out)
     local result = {}
 
     local handle = assert(io.open(filename))
