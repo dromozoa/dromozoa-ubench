@@ -33,20 +33,20 @@ local function quote(v)
 end
 
 local filename = assert(os.tmpname())
-
 local result, message = pcall(function ()
   local command = { "env", quote("DROMOZOA_UBENCH_FILENAME=" .. filename) }
-  for i = 1, #arg do
+  for i = 2, #arg do
     command[#command + 1] = quote(arg[i])
   end
   local command = table.concat(command, " ")
   for i = 1, 10 do
     assert(os.execute(command))
-    assert(nanosleep { tv_sec = 1; tv_nsec = 0 })
+    assert(nanosleep({ tv_sec = 1; tv_nsec = 0 }))
   end
-  ubench():merge(filename)
+  local out = assert(io.open(arg[1], "w"))
+  ubench():merge(filename, out)
+  out:close()
 end)
-
 os.remove(filename)
 
 if not result then

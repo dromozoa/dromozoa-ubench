@@ -16,14 +16,13 @@
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
 local ubench = require "dromozoa.ubench"
+local core = require "dromozoa.ubench.core"
 local tarai = require "dromozoa.ubench.tarai"
 
 local b = ubench()
-b:add("identity", function (ctx) return ctx end)
-b:add("increment", function (ctx) return ctx + 1 end, 0)
-b:add("decrement", function (ctx) return ctx - 1 end, 0)
-b:add("tarai(2,1,0)", function (ctx, ...) return ctx, tarai(...) end, 0, 2, 1, 0)
-b:add("tarai(4,2,0)", function (ctx, ...) return ctx, tarai(...) end, 0, 4, 2, 0)
-b:add("tarai(6,3,0)", function (ctx, ...) return ctx, tarai(...) end, 0, 6, 3, 0)
-b:add("tarai(8,4,0)", function (ctx, ...) return ctx, tarai(...) end, 0, 8, 4, 0)
+core(b)
+b:add("tarai2", function (ctx, ...) return ctx, tarai(...) end, 0, 2, 1, 0)
+b:add("tarai4", function (ctx, ...) return ctx, tarai(...) end, 0, 4, 2, 0)
+b:add("tarai6", function (ctx, ...) return ctx, tarai(...) end, 0, 6, 3, 0)
+b:add("tarai8", function (ctx, ...) return ctx, tarai(...) end, 0, 8, 4, 0)
 b:run()

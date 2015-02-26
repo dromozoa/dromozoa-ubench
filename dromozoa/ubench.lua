@@ -18,20 +18,22 @@
 local gettimeofday = require "dromozoa.ubench.gettimeofday"
 
 local format = string.format
+local concat = table.concat
 local unpack = table.unpack or unpack
+local sort = table.sort
 
 local function run1(n, fn, ctx, ...)
   collectgarbage()
   collectgarbage()
 
-  local t1 = gettimeofday()
+  local tv1 = gettimeofday()
   for i = 1, n do
     ctx = fn(ctx, ...)
   end
-  local t2 = gettimeofday()
+  local tv2 = gettimeofday()
 
-  local s = t2.tv_sec - t1.tv_sec
-  local u = t2.tv_usec - t1.tv_usec
+  local s = tv2.tv_sec - tv1.tv_sec
+  local u = tv2.tv_usec - tv1.tv_usec
   if u < 0 then
     s = s - 1
     u = u + 1000000
@@ -44,21 +46,26 @@ local function run2(m, n, fn, ...)
   for i = 1, m do
     data[i] = run1(n, fn, ...) / n
   end
-  table.sort(data)
+  sort(data)
 
-  local a = math.floor(m / 8)
-  local b = math.floor(m * 3 / 8)
+  local a = m / 8
+  local b = a * 3
+  a = a - a % 1
+  b = b - b % 1
+  local c = b - a
+
   local avg = 0
   for i = a, b do
     avg = avg + data[i]
   end
-  avg = avg / (b - a)
+  avg = avg / c
 
   local std = 0
   for i = a, b do
-    std = std + (data[i] - avg) ^ 2
+    local v = data[i] - avg
+    std = std + v * v
   end
-  std = std / (b - a)
+  std = std / c
   std = std ^ 0.5
 
   return avg, std
@@ -72,7 +79,8 @@ local function estimate(u, fn, ctx, ...)
     local t = run1(n, fn, ctx, ...)
     if t < 1 then t = 1 end
     if a <= t and t < b then return n end
-    local m = math.floor(n * u / t)
+    local m = n * u / t
+    m = m - m % 1
     if m < 1 then m = 1 end
     if n == m then return n end
     n = m
@@ -81,13 +89,11 @@ end
 
 local function to_human_readable_duration(u)
   if u < 1 then
-    return u * 1000, "nsec"
+    return format("%6.2f nsec", u * 1000)
   elseif u < 1000 then
-    return u, "usec"
-  elseif u < 1000000 then
-    return u * 0.001, "msec"
+    return format("%6.2f usec", u)
   else
-    return u * 0.000001, "sec"
+    return format("%6.2f msec", u * 0.001)
   end
 end
 
@@ -107,7 +113,6 @@ return function ()
 
   function self:run()
     local filename = os.getenv "DROMOZOA_UBENCH_FILENAME"
-
     local out = io.stderr
     local result = {}
 
@@ -118,11 +123,12 @@ return function ()
       local n = #v.name
       if m < n then m = n end
     end
-
-    local hr = ""
-    for i = 1, m do hr = hr .. "-" end
     out:write(format("| %-" .. m .. "s |     average |  std/avg |\n", "name"))
-    out:write(format("|:%-" .. m .. "s | -----------:| --------:|\n", hr))
+
+    local hr = {}
+    for i = 1, m do hr[i] = "-" end
+    out:write(format("|:%-" .. m .. "s | -----------:| --------:|\n", concat(hr)))
+
     for i = 1, #bench do
       local v = bench[i]
       local n = estimate(1000, v.fn, unpack(v.arg))
@@ -132,13 +138,11 @@ return function ()
         avg = avg;
         std = std;
       }
-      local a, b = to_human_readable_duration(avg)
-      local c = std / avg * 100
-      out:write(format("| %-" .. m .. "s | %6.2f %-4s | %6.2f %% |\n", v.name, a, b, c))
+      out:write(format("| %-" .. m .. "s | %s | %6.2f %% |\n", v.name, to_human_readable_duration(avg), std / avg * 100))
     end
     out:write("\n")
 
-    if filename ~= nil then
+    if filename then
       local out = assert(io.open(filename, "a"))
       for i = 1, #result do
         local v = result[i]
@@ -148,19 +152,19 @@ return function ()
     end
   end
 
-  function self:merge(filename)
-    local out = io.stderr
+  function self:merge(filename, out)
     local result = {}
 
     local handle = assert(io.open(filename))
     for line in handle:lines() do
-      local i, name, avg = assert(line:match("^(%d+)\t([^\t]+)\t([^\t]+)$"))
-      local i = tonumber(i)
-      local avg = tonumber(avg)
-      if result[i] == nil then
+      local i, name, avg = line:match("^(%d+)\t([^\t]+)\t([^\t]+)$")
+      i = tonumber(i)
+      avg = tonumber(avg)
+      local t = result[i]
+      if not t then
         result[i] = { name = name; data = { avg } }
       else
-        local data = result[i].data
+        local data = t.data
         data[#data + 1] = avg
       end
     end
@@ -173,7 +177,7 @@ return function ()
       if m < n then m = n end
 
       local data = v.data
-      table.sort(data)
+      sort(data)
       v.min = data[1]
       v.max = data[#data]
 
@@ -185,16 +189,13 @@ return function ()
       v.avg = avg
     end
 
-    local hr = ""
-    for i = 1, m do hr = hr .. "-" end
+    local hr = {}
+    for i = 1, m do hr[i] = "-" end
     out:write(format("| %-" .. m .. "s |     minimum |     average |     maximum |\n", "name"))
-    out:write(format("| %-" .. m .. "s | -----------:| -----------:| -----------:|\n", hr))
+    out:write(format("| %-" .. m .. "s | -----------:| -----------:| -----------:|\n", concat(hr)))
     for i = 1, #result do
       local v = result[i]
-      local min_a, min_b = to_human_readable_duration(v.min)
-      local avg_a, avg_b = to_human_readable_duration(v.avg)
-      local max_a, max_b = to_human_readable_duration(v.max)
-      out:write(format("| %-" .. m .. "s | %6.2f %-4s | %6.2f %-4s | %6.2f %-4s |\n", v.name, min_a, min_b, avg_a, avg_b, max_a, max_b))
+      out:write(format("| %-" .. m .. "s | %s | %s | %s |\n", v.name, to_human_readable_duration(v.min), to_human_readable_duration(v.avg), to_human_readable_duration(v.max)))
     end
     out:write("\n")
   end
