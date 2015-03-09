@@ -15,23 +15,42 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local ubench = require "dromozoa.ubench"
-local core = require "dromozoa.ubench.core"
-local tail = require "dromozoa.ubench.tail"
-local tarai = require "dromozoa.ubench.tarai"
-
-local b = ubench()
-for i = 1, #arg do
-  local v = arg[i]
-  if v == "core" then
-    core(b)
-  elseif v == "tail" then
-    tail(b)
-  elseif v == "tarai" then
-    b:add("tarai2", function (ctx, ...) return ctx, tarai(...) end, 0, 2, 1, 0)
-    b:add("tarai4", function (ctx, ...) return ctx, tarai(...) end, 0, 4, 2, 0)
-    b:add("tarai6", function (ctx, ...) return ctx, tarai(...) end, 0, 6, 3, 0)
-    b:add("tarai8", function (ctx, ...) return ctx, tarai(...) end, 0, 8, 4, 0)
+local function tail1(ctx, i, j, v, ...)
+  if i == j then
+    return ctx + v
+  else
+    return tail1(ctx + v, i + 1, j, ...)
   end
 end
-b:run()
+
+local function tail2(ctx, i, j, v, ...)
+  if j > 1 then
+    return tail2(ctx + v, i + 1, j - 1, ...)
+  else
+    return ctx + v
+  end
+end
+
+return function (b)
+  local unpack = table.unpack or unpack
+
+  local data = {}
+  for i = 1, 16 do
+    data[i] = i
+  end
+
+  b:add("for", function (ctx, ...)
+    for i = 1, select("#", ...) do
+      ctx = ctx + select(i, ...)
+    end
+    return ctx
+  end, 0, unpack(data))
+
+  b:add("tail1", function (ctx, ...)
+    return tail1(ctx, 1, select("#", ...), ...)
+  end, 0, unpack(data))
+
+  b:add("tail2", function (ctx, ...)
+    return tail2(ctx, 1, select("#", ...), ...)
+  end, 0, unpack(data))
+end
