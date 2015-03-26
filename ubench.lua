@@ -17,12 +17,21 @@
 
 local ubench = require "dromozoa.ubench"
 local core = require "dromozoa.ubench.core"
+local tail = require "dromozoa.ubench.tail"
 local tarai = require "dromozoa.ubench.tarai"
 
 local b = ubench()
-core(b)
-b:add("tarai2", function (ctx, ...) return ctx, tarai(...) end, 0, 2, 1, 0)
-b:add("tarai4", function (ctx, ...) return ctx, tarai(...) end, 0, 4, 2, 0)
-b:add("tarai6", function (ctx, ...) return ctx, tarai(...) end, 0, 6, 3, 0)
-b:add("tarai8", function (ctx, ...) return ctx, tarai(...) end, 0, 8, 4, 0)
+for i = 1, #arg do
+  local v = arg[i]
+  if v == "core" then
+    core(b)
+  elseif v == "tail" then
+    tail(b)
+  elseif v == "tarai" then
+    b:add("tarai2", function (ctx, ...) return ctx, tarai(...) end, 0, 2, 1, 0)
+    b:add("tarai4", function (ctx, ...) return ctx, tarai(...) end, 0, 4, 2, 0)
+    b:add("tarai6", function (ctx, ...) return ctx, tarai(...) end, 0, 6, 3, 0)
+    b:add("tarai8", function (ctx, ...) return ctx, tarai(...) end, 0, 8, 4, 0)
+  end
+end
 b:run()
