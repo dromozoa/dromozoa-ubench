@@ -519,4 +519,22 @@ return function (b)
     v = v * v
     return v * v
   end, 0)
+
+  do
+    local data = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }
+
+    b:add("array16.empty.length", function (ctx)
+      if #data == 0 then
+        ctx = ctx + 1
+      end
+      return ctx
+    end, 0)
+
+    b:add("array16.empty.next", function (ctx)
+      if next(data) == nil then
+        ctx = ctx + 1
+      end
+      return ctx
+    end, 0)
+  end
 end

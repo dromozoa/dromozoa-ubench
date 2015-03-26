@@ -32,6 +32,7 @@ local function tail2(ctx, i, j, v, ...)
 end
 
 return function (b)
+  local select = select
   local unpack = table.unpack or unpack
 
   local data = {}
