@@ -15,14 +15,14 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local run = require "dromozoa.ubench.run"
+local run1 = require "dromozoa.ubench.run1"
 
 return function (u, fn)
   local a = u * 0.99
   local b = u * 1.01
   local n = 1
   while true do
-    local t = run(n, fn)
+    local t = run1(n, fn)
     if a <= t and t < b then
       return n
     end
