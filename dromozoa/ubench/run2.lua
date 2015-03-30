@@ -15,9 +15,11 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local stdev = require "dromozoa.ubench.stdev"
+local run1 = require "dromozoa.ubench.run1"
 
-local data = { 1, 2, 3, 4, 5 }
-local dev, avg = stdev.p(data)
-print(dev, avg)
-
+return function (m, n, fn)
+  local data = {}
+  for i = 1, m do
+    data[i] = run1(n, fn) / n
+  end
+end
