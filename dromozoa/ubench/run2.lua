@@ -16,10 +16,17 @@
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
 local run1 = require "dromozoa.ubench.run1"
+local stdev = require "dromozoa.ubench.stdev"
 
 return function (m, n, fn)
   local data = {}
   for i = 1, m do
     data[i] = run1(n, fn) / n
   end
+  table.sort(data)
+  local a = m / 8
+  local b = a * 3
+  a = a - a % 1
+  b = b - b % 1
+  return stdev.s(data, a, b)
 end
