@@ -14,14 +14,7 @@ int tarai(int x, int y, int z) {
   }
 }
 
-int main(int argc, char* argv[]) {
-  if (argc < 4) {
-    return 1;
-  }
-  int x = atoi(argv[1]);
-  int y = atoi(argv[2]);
-  int z = atoi(argv[3]);
-
+int run1(int x, int y, int z) {
   PCM* pcm = PCM::getInstance();
   PCM::ErrorCode ec = pcm->program();
 
@@ -100,6 +93,70 @@ int main(int argc, char* argv[]) {
   }
 
   pcm->resetPMU();
-
   return 0;
+}
+
+int run2(int x, int y, int z) {
+  PCM* pcm = PCM::getInstance();
+  PCM::ErrorCode ec = pcm->program();
+
+  if (ec != PCM::Success) {
+    if (ec == PCM::PMUBusy) {
+      pcm->resetPMU();
+    } else {
+      std::cerr << "pcm->program() failed: " << ec << "\n";
+      return 1;
+    }
+  }
+
+  struct timeval tv0 = {};
+  struct timeval tv1 = {};
+
+  for (int i = 0; i < 1000; ++i) {
+    gettimeofday(&tv0, 0);
+    SystemCounterState s0 = getSystemCounterState();
+    tarai(x, y, z);
+    SystemCounterState s1 = getSystemCounterState();
+    gettimeofday(&tv1, 0);
+
+    int64_t s = tv1.tv_sec;
+    int32_t u = tv1.tv_usec;
+    if (u < tv0.tv_usec) {
+      --s;
+      u += 1000000;
+    }
+    s -= tv0.tv_sec;
+    u -= tv0.tv_usec;
+
+    std::cout << std::setfill('0') << s << "." << std::setw(6) << u;
+
+#define REPORT(name) \
+    std::cout << "\t" << get ## name (s0, s1);
+
+    REPORT(Cycles);
+    REPORT(ExecUsage);
+    REPORT(IPC);
+    REPORT(InstructionsRetired);
+    REPORT(InvariantTSC);
+    REPORT(L2CacheHitRatio);
+    REPORT(L3CacheHitRatio);
+    REPORT(RefCycles);
+
+#undef REPORT
+
+    std::cout << "\n";
+  }
+
+  pcm->resetPMU();
+  return 0;
+}
+
+int main(int argc, char* argv[]) {
+  if (argc < 4) {
+    return 1;
+  }
+  int x = atoi(argv[1]);
+  int y = atoi(argv[2]);
+  int z = atoi(argv[3]);
+  return run2(x, y, z);
 }
