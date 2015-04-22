@@ -17,68 +17,129 @@
 
 local format = string.format
 
-local DEBUG = false
+local DEBUG = ...
 
-local function write(out, name, n, fn)
-  out:write(format("tbl[%q] = function()\n", format("%s%d", name, n)))
-  out:write [[
+local function write(out, name, n, code)
+  local key = format("%s/%d", name, n)
+  out:write(format([[
+ubench[#ubench + 1] = { %q, function (...)
 local out
 local b0, b1 = false, true
 local n1, n2 = 1, 2
 local s1, s2 = "foo", "bar"
-]]
+local t = ut
+local fc, ft, fi = call, tailcall, inline
+]], key))
   for i = 1, n do
-    fn(out, i)
-    out:write("\n")
+    out:write(code, "\n")
   end
   if DEBUG then
     out:write "print(out)\n"
   end
-  out:write "end\n"
   out:write [[
+end }
 ]]
   if DEBUG then
-    out:write(format("tbl[%q]()\n", format("%s%d", name, n)))
+    out:write("ubench[#ubench][2]()\n")
   end
 end
 
 local tbl = {
-  { "MOVE", function (out, i) out:write("out = n1") end };
-  { "ADD", function (out, i) out:write("out = n1 + n2") end };
-  { "SUB", function (out, i) out:write("out = n1 - n2") end };
-  { "MUL", function (out, i) out:write("out = n1 * n2") end };
-  { "MOD", function (out, i) out:write("out = n1 % n2") end };
-  { "POW", function (out, i) out:write("out = n1 ^ n2") end };
-  { "DIV", function (out, i) out:write("out = n1 / n2") end };
-  { "IDIV", function (out, i) out:write("out = n1 // n2") end };
-  { "BAND", function (out, i) out:write("out = n1 & n2") end };
-  { "BOR", function (out, i) out:write("out = n1 | n2") end };
-  { "BXOR", function (out, i) out:write("out = n1 ~ n2") end };
-  { "SHL", function (out, i) out:write("out = n1 << n2") end };
-  { "SHR", function (out, i) out:write("out = n1 >> n2") end };
-  { "UNM", function (out, i) out:write("out = -n1") end };
-  { "BNOT", function (out, i) out:write("out = ~n1") end };
-  { "NOT", function (out, i) out:write("out = not b0") end };
-  { "LEN", function (out, i) out:write("out = #s1") end };
-  { "CONCAT", function (out, i) out:write("out = s1 .. s2") end }; -- MOVE,MOVE
-  { "EQ", function (out, i) out:write("if n1 == n1 then out = n1 + n2 end") end }; -- ADD
-  { "LT", function (out, i) out:write("if n1 < n2 then out = n1 + n2 end") end }; -- ADD
-  { "LE", function (out, i) out:write("if n1 <= n2 then out = n1 + n2 end") end }; -- ADD
-  { "TEST", function (out, i) out:write("if b1 then out = n1 + n2 end") end }; -- ADD
-  { "TESTSET", function (out, i) out:write("out = b1 or n1") end };
+  { "NOOP",     "" };
+  { "MOVE",     "out = n1" };
+  { "LOADK",    "out = 42" };
+  { "LOADBOOL", "out = true" };
+  { "GETUPVAL", "out = un" };
+  { "GETTABUP", "out = ut[n1]" };
+  { "GETTABLE", "out = t[n1]" };
+  { "SETUPVAL", "un = n1" };
+  { "SETTABUP", "ut[n1] = n1" };
+  { "SETTABLE", "t[n1] = n1" };
+  { "NEWTABLE", "out = {}" };                           -- MOVE
+  { "ADD",      "out = n1 + n2" };
+  { "SUB",      "out = n1 - n2" };
+  { "MUL",      "out = n1 * n2" };
+  { "MOD",      "out = n1 % n2" };
+  { "POW",      "out = n1 ^ n2" };
+  { "DIV",      "out = n1 / n2" };
+  { "IDIV",     "out = n1 // n2" };
+  { "BAND",     "out = n1 & n2" };
+  { "BOR",      "out = n1 | n2" };
+  { "BXOR",     "out = n1 ~ n2" };
+  { "SHL",      "out = n1 << n2" };
+  { "SHR",      "out = n1 >> n2" };
+  { "UNM",      "out = -n1" };
+  { "BNOT",     "out = ~n1" };
+  { "NOT",      "out = not b0" };
+  { "LEN",      "out = #s1" };
+  { "CONCAT",   "out = s1 .. s2" };                     -- MOVEx2
+  { "EQ",       "if n1 == n1 then out = n1 + n2 end" }; -- ADD
+  { "LT",       "if n1 < n2 then out = n1 + n2 end" };  -- ADD
+  { "LE",       "if n1 <= n2 then out = n1 + n2 end" }; -- ADD
+  { "TEST",     "if b1 then out = n1 + n2 end" };       -- ADD
+  { "TESTSET",  "out = b1 or n1" };
+  { "CALL-C",   "out = fc(n1, n2)" };                   -- MOVEx3
+  { "CALL-T",   "out = ft(n1, n2)" };                   -- MOVEx3
+  { "CALL-I",   "out = fi(n1, n2)" };                   -- MOVEx3
+  { "CLOSURE",  "out = function () end" };              -- MOVE
+  { "VARARG",   "out = ..." };
 }
 
-io.write("local tbl = {}\n")
+io.write [[
+local function add(a, b)
+  return a + b
+end
+
+-- GETUPVAL
+-- MOVE
+-- MOVE
+-- CALL
+--   ADD
+--   RETURN
+-- RETURN
+local function call(a, b)
+  local out = add(a, b)
+  return out
+end
+
+-- GETUPVAL
+-- MOVE
+-- MOVE
+-- TAILCALL
+--   ADD
+--   RETURN
+-- RETURN
+local function tailcall(a, b)
+  return add(a, b)
+end
+
+-- GETUPVAL
+-- MOVE
+-- MOVE
+-- ADD
+-- RETURN
+local function inline(a, b)
+  local out, a, b = add, a, b
+  out = a + b
+  return out
+end
+
+local un = 1, 2
+local ut = { 1, 2, 3, 4, 5, 6, 7, 8 }
+local ubench = {}
+]]
 for i = 1, #tbl do
   local v = tbl[i]
   local name = v[1]
-  local fn = v[2]
+  local code = v[2]
   if DEBUG then
-    write(io.stdout, name, 4, fn)
+    write(io.stdout, name, 4, code)
   else
-    for j = 4, 16, 4 do
-      write(io.stdout, name, j, fn)
+    for j = 4, 32, 4 do
+      write(io.stdout, name, j, code)
     end
   end
 end
-io.write("return tbl\n")
+io.write [[
+return ubench
+]]
