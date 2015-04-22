@@ -15,17 +15,9 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local json = require "dromozoa.json"
-local run = require "dromozoa.ubench.run"
+local estimate = require "dromozoa.ubench.estimate"
+local run2 = require "dromozoa.ubench.run2"
 
-local name = ...
-local ubench = require(name)
-
-local result = {}
-for i = 1, #ubench do
-  local v = ubench[i]
-  local s, a = run(500, 1000, v[2])
-  io.stderr:write(i, "\n")
-  result[#result + 1] = { v[1], s, a, v[3] }
+return function (m, u, fn)
+  return run2(m, estimate(u, fn), fn)
 end
-io.write(json.encode(result), "\n")

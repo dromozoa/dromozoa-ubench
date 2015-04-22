@@ -19,7 +19,7 @@ local format = string.format
 
 local DEBUG = ...
 
-local function write(out, name, n, code)
+local function write(out, name, n, code, opts)
   local key = format("%s/%d", name, n)
   out:write(format([[
 ubench[#ubench + 1] = { %q, function (...)
@@ -37,7 +37,13 @@ local fc, ft, fi = call, tailcall, inline
     out:write "print(out)\n"
   end
   out:write [[
-end }
+end, {
+]]
+  for k, v in pairs(opts) do
+    out:write(format("[%q] = %d;\n", k, v))
+  end
+  out:write [[
+} }
 ]]
   if DEBUG then
     out:write("ubench[#ubench][2]()\n")
@@ -55,7 +61,7 @@ local tbl = {
   { "SETUPVAL", "un = n1" };
   { "SETTABUP", "ut[n1] = n1" };
   { "SETTABLE", "t[n1] = n1" };
-  { "NEWTABLE", "out = {}" };                           -- MOVE
+  { "NEWTABLE", "out = {}", { MOVE = 1 } };
   { "ADD",      "out = n1 + n2" };
   { "SUB",      "out = n1 - n2" };
   { "MUL",      "out = n1 * n2" };
@@ -72,16 +78,16 @@ local tbl = {
   { "BNOT",     "out = ~n1" };
   { "NOT",      "out = not b0" };
   { "LEN",      "out = #s1" };
-  { "CONCAT",   "out = s1 .. s2" };                     -- MOVEx2
-  { "EQ",       "if n1 == n1 then out = n1 + n2 end" }; -- ADD
-  { "LT",       "if n1 < n2 then out = n1 + n2 end" };  -- ADD
-  { "LE",       "if n1 <= n2 then out = n1 + n2 end" }; -- ADD
-  { "TEST",     "if b1 then out = n1 + n2 end" };       -- ADD
+  { "CONCAT",   "out = s1 .. s2", { MOVE = 2 } };
+  { "EQ",       "if n1 == n1 then out = n1 + n2 end", { ADD = 1 } };
+  { "LT",       "if n1 < n2 then out = n1 + n2 end",  { ADD = 1 } };
+  { "LE",       "if n1 <= n2 then out = n1 + n2 end", { ADD = 1 } };
+  { "TEST",     "if b1 then out = n1 + n2 end",       { ADD = 1 } };
   { "TESTSET",  "out = b1 or n1" };
-  { "CALL-C",   "out = fc(n1, n2)" };                   -- MOVEx3
-  { "CALL-T",   "out = ft(n1, n2)" };                   -- MOVEx3
-  { "CALL-I",   "out = fi(n1, n2)" };                   -- MOVEx3
-  { "CLOSURE",  "out = function () end" };              -- MOVE
+  { "CALL_C",   "out = fc(n1, n2)", { CALL_I = 1 } };
+  { "CALL_T",   "out = ft(n1, n2)", { CALL_I = 1 } };
+  { "CALL_I",   "out = fi(n1, n2)", { MOVE = 5, GETUPVAL = 1, ADD } };
+  { "CLOSURE",  "out = function () end", { MOVE = 1 } };
   { "VARARG",   "out = ..." };
 }
 
@@ -132,11 +138,15 @@ for i = 1, #tbl do
   local v = tbl[i]
   local name = v[1]
   local code = v[2]
+  local opts = v[3]
+  if not opts then
+    opts = {}
+  end
   if DEBUG then
-    write(io.stdout, name, 4, code)
+    write(io.stdout, name, 4, code, opts)
   else
     for j = 4, 32, 4 do
-      write(io.stdout, name, j, code)
+      write(io.stdout, name, j, code, opts)
     end
   end
 end

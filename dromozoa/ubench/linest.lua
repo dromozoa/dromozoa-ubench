@@ -15,23 +15,50 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local gettimeofday = require "dromozoa.ubench.gettimeofday"
+local function linest1k(y, x, b)
+  local sx = 0
+  local sxx = 0
+  local sxy = 0
 
-return function (n, fn)
-  collectgarbage()
-  collectgarbage()
-
-  local tv1 = gettimeofday()
+  local n = #y
   for i = 1, n do
-    fn()
+    local vx = x[i] or i
+    local vy = y[i]
+    sx = sx + vx
+    sxx = sxx + vx * vx
+    sxy = sxy + vx * vy
   end
-  local tv2 = gettimeofday()
 
-  local s = tv2.tv_sec - tv1.tv_sec
-  local u = tv2.tv_usec - tv1.tv_usec
-  if u < 0 then
-    s = s - 1
-    u = u + 1000000
+  local a = (sxy - b * sx) / sxx
+  return a, b
+end
+
+local function linest1(y, x)
+  local sx = 0
+  local sy = 0
+  local sxx = 0
+  local sxy = 0
+
+  local n = #y
+  for i = 1, n do
+    local vx = x[i] or i
+    local vy = y[i]
+    sx = sx + vx
+    sy = sy + vy
+    sxx = sxx + vx * vx
+    sxy = sxy + vx * vy
   end
-  return s * 1000000 + u
+
+  local d = n * sxx - sx * sx
+  local a = (n * sxy - sx * sy) / d
+  local b = (sy * sxx - sx * sxy) / d
+  return a, b
+end
+
+return function (y, x, b)
+  if b then
+    return linest1k(y, x, b)
+  else
+    return linest1(y, x)
+  end
 end

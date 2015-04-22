@@ -26,14 +26,10 @@ return function (u, fn)
     if a <= t and t < b then
       return n
     end
-    if t < 1 then
-      t = 1
-    end
+    if t < 1 then t = 1 end
     local m = n * u / t
     m = m - m % 1
-    if m < 1 then
-      m = 1
-    end
+    if m < 1 then m = 1 end
     if n == m then
       return n
     end

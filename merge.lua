@@ -16,16 +16,41 @@
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
 local json = require "dromozoa.json"
-local run = require "dromozoa.ubench.run"
 
-local name = ...
-local ubench = require(name)
+local names = {}
+local name_set = {}
+
+local data = json.decode(io.stdin:read("*a"))
 
 local result = {}
-for i = 1, #ubench do
-  local v = ubench[i]
-  local s, a = run(500, 1000, v[2])
-  io.stderr:write(i, "\n")
-  result[#result + 1] = { v[1], s, a, v[3] }
+for i = 1, #data do
+  local v = data[i]
+  local k = v[1]
+  local s = v[2]
+  local a = v[3]
+  local name, n = k:match("^(.*)/(%d+)$")
+  assert(name)
+  if not name_set[name] then
+    names[#names + 1] = name
+    name_set[name] = true
+  end
+  local n = tonumber(n)
+  local t = result[name]
+  if not t then
+    t = {}
+    result[name] = t
+  end
+  t[n] = a
 end
-io.write(json.encode(result), "\n")
+
+for i = 1, #names do
+  local name = names[i]
+  local v = result[name]
+  io.write(name)
+  for j = 4, 32, 4 do
+    -- io.write(json.encode(v))
+    io.write(string.format("\t%.17g", v[j]))
+  end
+  io.write("\n")
+end
+
