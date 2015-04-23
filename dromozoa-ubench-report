@@ -1,0 +1,154 @@
+#! /usr/bin/env lua
+
+-- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+--
+-- This file is part of dromozoa-ubench.
+--
+-- dromozoa-ubench is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- dromozoa-ubench is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
+
+local json = require "dromozoa.json"
+local linest = require "dromozoa.ubench.linest"
+local min = require "dromozoa.ubench.min"
+local stdev = require "dromozoa.ubench.stdev"
+
+local format = string.format
+
+local order = {}
+local order_map = {}
+local data = {}
+
+for i = 1, #arg do
+  local handle = assert(io.open(arg[i]))
+  local result = json.decode(handle:read("*a"))
+  handle:close()
+
+  for j = 1, #result do
+    local v = result[j]
+    local k = v[1]
+    local s = v[2]
+    local a = v[3]
+    local opts = v[4]
+    local name, n = k:match("^(.*)/(%d+)$")
+    assert(name)
+    local n = tonumber(n)
+
+    if not order_map[name] then
+      order[#order + 1] = name
+      order_map[name] = true
+    end
+
+    local t = data[name]
+    if not t then
+      t = {}
+      data[name] = t
+    end
+    local u = t[n]
+    if not u then
+      u = {
+        s = {};
+        a = {};
+        opts = opts;
+      }
+      t[n] = u
+    end
+    u.s[#u.s + 1] = s
+    u.a[#u.a + 1] = a
+  end
+end
+
+local function write_s(order, data)
+  for i = 1, #order do
+    local name = order[i]
+    for j = 4, 32, 4 do
+      local v = data[name][j]
+      io.write(format("%s/%d", name, j))
+      for k = 1, #v.s do
+        io.write("\t", v.s[k] / v.a[k] * 100)
+      end
+      io.write("\n")
+    end
+  end
+end
+
+local function write_a(order, data)
+  for i = 1, #order do
+    local name = order[i]
+    for j = 4, 32, 4 do
+      local v = data[name][j]
+      local s, a = stdev.s(v.a)
+      io.write(format("%s/%d", name, j), "\t", s, "\t", a)
+      for k = 1, #v.s do
+        io.write("\t", v.a[k])
+      end
+      io.write("\n")
+    end
+  end
+end
+
+local function write(order, data)
+  local tbl = {}
+
+  for i = 1, #order do
+    local name = order[i]
+
+    local y = {}
+    local x = {}
+    local opts
+    for j = 4, 32, 4 do
+      local v = data[name][j]
+      y[#y + 1] = min(v.a)
+      x[#x + 1] = j
+      opts = v.opts
+    end
+
+    local a, b = linest(y, x)
+
+    tbl[name] = {
+      y = y;
+      x = x;
+      a = a;
+      b = b;
+      opts = opts;
+    }
+  end
+
+  for i = 1, #order do
+    local name = order[i]
+    local v = tbl[name]
+    local c = v.a
+    local opts = v.opts
+    for k, v in pairs(opts) do
+      c = c - tbl[k].a * v
+    end
+    tbl[name].c = c
+  end
+
+  for i = 1, #order do
+    local name = order[i]
+    tbl[name].d = tbl[name].c / tbl.MOVE.c
+  end
+
+  for i = 1, #order do
+    local name = order[i]
+    io.write(name)
+    local v = tbl[name]
+    local y = v.y
+    for j = 1, #y do
+      io.write(format("\t%.17g", y[j]))
+    end
+    io.write(format("\t%.17g\t%.17g\t%.17g\t%.17g\n", v.a, v.b, v.c, v.d))
+  end
+end
+
+write(order, data)
