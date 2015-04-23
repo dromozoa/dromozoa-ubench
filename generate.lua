@@ -17,7 +17,8 @@
 
 local format = string.format
 
-local DEBUG = ...
+local VERSION, DEBUG = ...
+VERSION = tonumber(VERSION)
 
 local function write(out, name, n, code, opts)
   local key = format("%s/%d", name, n)
@@ -68,14 +69,14 @@ local tbl = {
   { "MOD",      "out = n1 % n2" };
   { "POW",      "out = n1 ^ n2" };
   { "DIV",      "out = n1 / n2" };
-  { "IDIV",     "out = n1 // n2" };
-  { "BAND",     "out = n1 & n2" };
-  { "BOR",      "out = n1 | n2" };
-  { "BXOR",     "out = n1 ~ n2" };
-  { "SHL",      "out = n1 << n2" };
-  { "SHR",      "out = n1 >> n2" };
+  { "IDIV",     "out = n1 // n2", {}, 83 };
+  { "BAND",     "out = n1 & n2",  {}, 83 };
+  { "BOR",      "out = n1 | n2",  {}, 83 };
+  { "BXOR",     "out = n1 ~ n2",  {}, 83 };
+  { "SHL",      "out = n1 << n2", {}, 83 };
+  { "SHR",      "out = n1 >> n2", {}, 83 };
   { "UNM",      "out = -n1" };
-  { "BNOT",     "out = ~n1" };
+  { "BNOT",     "out = ~n1", {}, 83 };
   { "NOT",      "out = not b0" };
   { "LEN",      "out = #s1" };
   { "CONCAT",   "out = s1 .. s2", { MOVE = 2 } };
@@ -139,14 +140,20 @@ for i = 1, #tbl do
   local name = v[1]
   local code = v[2]
   local opts = v[3]
+  local version = v[4]
   if not opts then
     opts = {}
   end
-  if DEBUG then
-    write(io.stdout, name, 4, code, opts)
-  else
-    for j = 4, 32, 4 do
-      write(io.stdout, name, j, code, opts)
+  if not version then
+    version = 51
+  end
+  if version <= VERSION then
+    if DEBUG then
+      write(io.stdout, name, 4, code, opts)
+    else
+      for j = 4, 32, 4 do
+        write(io.stdout, name, j, code, opts)
+      end
     end
   end
 end
