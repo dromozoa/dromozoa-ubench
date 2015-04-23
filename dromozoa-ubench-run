@@ -18,7 +18,7 @@
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
 -- local json = require "dromozoa.json"
-local run = require "dromozoa.ubench.runner"
+local run = require "dromozoa.ubench.run"
 
 local column_metatable = {}
 
