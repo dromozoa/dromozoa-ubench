@@ -15,9 +15,9 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local estimate = require "dromozoa.ubench.estimate"
+local estimate_n = require "dromozoa.ubench.estimate_n"
 local run2 = require "dromozoa.ubench.run2"
 
 return function (m, u, fn)
-  return run2(m, estimate(u, fn), fn)
+  return run2(m, estimate_n(u, fn), fn)
 end

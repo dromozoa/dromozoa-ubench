@@ -15,13 +15,13 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local run1 = require "dromozoa.ubench.run1"
+local run_n = require "dromozoa.ubench.run_n"
 local stdev = require "dromozoa.ubench.stdev"
 
 return function (m, n, fn)
   local data = {}
   for i = 1, m do
-    data[i] = run1(n, fn) / n
+    data[i] = run_n(n, fn) / n
   end
   table.sort(data)
   local a = m / 8
