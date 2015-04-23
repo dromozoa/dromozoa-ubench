@@ -1,5 +1,3 @@
-#! /usr/bin/env lua
-
 -- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
@@ -17,42 +15,15 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local json = require "dromozoa.json"
-
-local names = {}
-local name_set = {}
-
-local data = json.decode(io.stdin:read("*a"))
-
-local result = {}
-for i = 1, #data do
-  local v = data[i]
-  local k = v[1]
-  local s = v[2]
-  local a = v[3]
-  local name, n = k:match("^(.*)/(%d+)$")
-  assert(name)
-  if not name_set[name] then
-    names[#names + 1] = name
-    name_set[name] = true
+return function (data, i, j)
+  if not i then i = 1 end
+  if not j then j = #data end
+  local min = data[i]
+  for i = i + 1, j do
+    local v = data[i]
+    if min > v then
+      min = v
+    end
   end
-  local n = tonumber(n)
-  local t = result[name]
-  if not t then
-    t = {}
-    result[name] = t
-  end
-  t[n] = a
+  return min
 end
-
-for i = 1, #names do
-  local name = names[i]
-  local v = result[name]
-  io.write(name)
-  for j = 4, 32, 4 do
-    -- io.write(json.encode(v))
-    io.write(string.format("\t%.17g", v[j]))
-  end
-  io.write("\n")
-end
-
