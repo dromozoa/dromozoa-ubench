@@ -18,13 +18,13 @@
 local gettimeofday = require "dromozoa.ubench.gettimeofday"
 local stdev = require "dromozoa.ubench.stdev"
 
-local function run(n, fn)
+local function run(n, f)
   collectgarbage()
   collectgarbage()
 
   local tv1 = gettimeofday()
   for i = 1, n do
-    fn()
+    f()
   end
   local tv2 = gettimeofday()
 
@@ -37,12 +37,12 @@ local function run(n, fn)
   return s * 1000000 + u
 end
 
-local function estimate(u, fn)
+local function estimate(u, f)
   local a = u * 0.99
   local b = u * 1.01
   local n = 1
   while true do
-    local t = run(n, fn)
+    local t = run(n, f)
     if a <= t and t < b then
       return n
     end
