@@ -15,7 +15,16 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local average = require "dromozoa.ubench.average"
+local function average(data, i, j)
+  local n = j - i + 1
+  local u = 0
+  while i <= j do
+    local v = data[i]
+    u = u + v
+    i = i + 1
+  end
+  return u / n
+end
 
 local function stdev(data, i, j, n)
   local a = average(data, i, j)
