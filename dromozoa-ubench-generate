@@ -41,7 +41,7 @@ local version_number = major_version * 16 + minor_version
 local function write(out, name, n, code, opts)
   local key = format("%s/%d", name, n)
   out:write(format([[
-ubench[#ubench + 1] = { %q, function (...)
+B[#B + 1] = { %q, function (...)
 local out = {} -- memory allocation to invalidate cache
 local b0, b1 = false, true
 local n1, n2 = 1, 2
@@ -65,7 +65,7 @@ end, {
 } }
 ]]
   if debug then
-    out:write("ubench[#ubench][2]()\n")
+    out:write("B[#B][2]()\n")
   end
 end
 
@@ -142,7 +142,7 @@ end
 
 local un = 1, 2
 local ut = { 1, 2, 3, 4, 5, 6, 7, 8 }
-local ubench = {}
+local B = {}
 ]]
 for i = 1, #def do
   local v = def[i]
@@ -161,5 +161,5 @@ for i = 1, #def do
   end
 end
 io.write [[
-return ubench
+return B
 ]]
