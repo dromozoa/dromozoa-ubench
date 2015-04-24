@@ -42,7 +42,7 @@ local function write(out, name, n, code, opts)
   local key = format("%s/%d", name, n)
   out:write(format([[
 B[#B + 1] = { %q, function (...)
-local out = {} -- memory allocation to invalidate cache
+local out
 local b0, b1 = false, true
 local n1, n2 = 1, 2
 local s1, s2 = "foo", "bar"
@@ -70,7 +70,6 @@ end, {
 end
 
 local def = {
-  { "0",        "" };
   { "MOVE",     "out = n1" };
   { "LOADK",    "out = 42" };
   { "LOADBOOL", "out = true" };
@@ -154,7 +153,7 @@ for i = 1, #def do
     if debug then
       write(io.stdout, name, 4, code, opts)
     else
-      for j = 4, 32, 4 do
+      for j = 0, 32 do
         write(io.stdout, name, j, code, opts)
       end
     end
