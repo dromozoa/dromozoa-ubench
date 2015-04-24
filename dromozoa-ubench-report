@@ -17,138 +17,78 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local json = require "dromozoa.json"
 local linest = require "dromozoa.ubench.linest"
-local min = require "dromozoa.ubench.min"
-local stdev = require "dromozoa.ubench.stdev"
 
 local format = string.format
 
-local order = {}
-local order_map = {}
-local data = {}
-
-for i = 1, #arg do
-  local handle = assert(io.open(arg[i]))
-  local result = json.decode(handle:read("*a"))
-  handle:close()
-
-  for j = 1, #result do
-    local v = result[j]
-    local k = v[1]
-    local s = v[2]
-    local a = v[3]
-    local opts = v[4]
-    local name, n = k:match("^(.*)/(%d+)$")
-    assert(name)
-    local n = tonumber(n)
-
-    if not order_map[name] then
-      order[#order + 1] = name
-      order_map[name] = true
-    end
-
-    local t = data[name]
-    if not t then
-      t = {}
-      data[name] = t
-    end
-    local u = t[n]
-    if not u then
-      u = {
-        s = {};
-        a = {};
-        opts = opts;
-      }
-      t[n] = u
-    end
-    u.s[#u.s + 1] = s
-    u.a[#u.a + 1] = a
+local B = assert(loadfile(arg[1]))()
+local K = {}
+local N = {}
+local X = {}
+local C = {}
+for i = 1, #B do
+  local key = B[i][1]
+  K[key] = i
+  local name, n = key:match("^(.*)/(%d+)$")
+  assert(name)
+  n = tonumber(n)
+  local x = X[name]
+  if x then
+    x[#x + 1] = n
+  else
+    N[#N + 1] = name
+    X[name] = { n }
+  end
+  if not C[name] then
+    C[name] = B[i][3] or {}
   end
 end
 
-local function write_s(order, data)
-  for i = 1, #order do
-    local name = order[i]
-    for j = 4, 32, 4 do
-      local v = data[name][j]
-      io.write(format("%s/%d", name, j))
-      for k = 1, #v.s do
-        io.write("\t", v.s[k] / v.a[k] * 100)
-      end
-      io.write("\n")
+local A = {}
+for i = 2, #arg do
+  local R = assert(loadfile(arg[i]))()
+  for j = 1, #R do
+    local a = A[j]
+    local r = R[j][2]
+    if not a or a > r then
+      A[j] = r
     end
   end
 end
 
-local function write_a(order, data)
-  for i = 1, #order do
-    local name = order[i]
-    for j = 4, 32, 4 do
-      local v = data[name][j]
-      local s, a = stdev.s(v.a)
-      io.write(format("%s/%d", name, j), "\t", s, "\t", a)
-      for k = 1, #v.s do
-        io.write("\t", v.a[k])
-      end
-      io.write("\n")
-    end
+local Y = {}
+for i = 1, #N do
+  local name = N[i]
+  local x = X[name]
+  local y = {}
+  for j = 1, #x do
+    local n = x[j]
+    local k = K[format("%s/%d", name, n)]
+    y[#y + 1] = A[k]
   end
+  Y[name] = y
 end
 
-local function write(order, data)
-  local tbl = {}
-
-  for i = 1, #order do
-    local name = order[i]
-
-    local y = {}
-    local x = {}
-    local opts
-    for j = 4, 32, 4 do
-      local v = data[name][j]
-      y[#y + 1] = min(v.a)
-      x[#x + 1] = j
-      opts = v.opts
-    end
-
-    local a, b = linest(y, x)
-
-    tbl[name] = {
-      y = y;
-      x = x;
-      a = a;
-      b = b;
-      opts = opts;
-    }
-  end
-
-  for i = 1, #order do
-    local name = order[i]
-    local v = tbl[name]
-    local c = v.a
-    local opts = v.opts
-    for k, v in pairs(opts) do
-      c = c - tbl[k].a * v
-    end
-    tbl[name].c = c
-  end
-
-  for i = 1, #order do
-    local name = order[i]
-    tbl[name].d = tbl[name].c / tbl.MOVE.c
-  end
-
-  for i = 1, #order do
-    local name = order[i]
-    io.write(name)
-    local v = tbl[name]
-    local y = v.y
-    for j = 1, #y do
-      io.write(format("\t%.17g", y[j]))
-    end
-    io.write(format("\t%.17g\t%.17g\t%.17g\t%.17g\n", v.a, v.b, v.c, v.d))
-  end
+local A = {}
+local B = {}
+for i = 1, #N do
+  local name = N[i]
+  A[name], B[name] = linest(Y[name], X[name])
 end
 
-write(order, data)
+io.write("Name")
+local x = X[N[1]]
+for i = 1, #x do
+  io.write(format("\t%d", x[i]))
+end
+io.write("\tA\tB\n")
+
+for i = 1, #N do
+  local name = N[i]
+  io.write(name)
+  local y = Y[name]
+  for j = 1, #y do
+    io.write(format("\t%.17g", y[j]))
+  end
+  io.write(format("\t%.17g\t%.17g\n", A[name], B[name]))
+end

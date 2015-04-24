@@ -30,7 +30,7 @@ return function ()
     code[#code + 1] = "  out = n1 + n2\n"
   end
   code[#code + 1] = "end\n"
-  B[#B + 1] = { "MOVE/" .. i, assert(loadstring(table.concat(code)))() }
+  B[#B + 1] = { "ADD/" .. i, assert(loadstring(table.concat(code)))() }
 end
 
 return B

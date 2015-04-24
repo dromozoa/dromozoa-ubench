@@ -22,6 +22,7 @@ local run = require "dromozoa.ubench.run"
 local format = string.format
 
 local B = assert(loadfile(arg[1]))()
+
 local F = {}
 for i = 1, #B do
   F[i] = B[i][2]
