@@ -15,50 +15,46 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local function linest1k(y, x, b)
-  local sx = 0
-  local sxx = 0
-  local sxy = 0
+local function linest1k(Y, X, b)
+  local sum_x = 0
+  local sum_xx = 0
+  local sum_xy = 0
 
-  local n = #y
-  for i = 1, n do
-    local vx = x[i] or i
-    local vy = y[i]
-    sx = sx + vx
-    sxx = sxx + vx * vx
-    sxy = sxy + vx * vy
+  for i = 1, #Y do
+    local x = X[i] or i
+    local y = Y[i]
+    sum_x = sum_x + x
+    sum_xx = sum_xx + x * x
+    sum_xy = sum_xy + x * y
   end
 
-  local a = (sxy - b * sx) / sxx
-  return a, b
+  return (sum_xy - b * sum_x) / sum_xx, b
 end
 
-local function linest1(y, x)
-  local sx = 0
-  local sy = 0
-  local sxx = 0
-  local sxy = 0
+local function linest1(Y, X)
+  local sum_x = 0
+  local sum_y = 0
+  local sum_xx = 0
+  local sum_xy = 0
 
-  local n = #y
+  local n = #Y
   for i = 1, n do
-    local vx = x[i] or i
-    local vy = y[i]
-    sx = sx + vx
-    sy = sy + vy
-    sxx = sxx + vx * vx
-    sxy = sxy + vx * vy
+    local x = X[i] or i
+    local y = Y[i]
+    sum_x = sum_x + x
+    sum_y = sum_y + y
+    sum_xx = sum_xx + x * x
+    sum_xy = sum_xy + x * y
   end
 
-  local d = n * sxx - sx * sx
-  local a = (n * sxy - sx * sy) / d
-  local b = (sy * sxx - sx * sxy) / d
-  return a, b
+  local d = n * sum_xx - sum_x * sum_x
+  return (n * sum_xy - sum_x * sum_y) / d, (sum_y * sum_xx - sum_x * sum_xy) / d
 end
 
-return function (y, x, b)
+return function (Y, X, b)
   if b then
-    return linest1k(y, x, b)
+    return linest1k(Y, X, b)
   else
-    return linest1(y, x)
+    return linest1(Y, X)
   end
 end
