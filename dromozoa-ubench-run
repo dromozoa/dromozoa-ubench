@@ -17,83 +17,21 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
--- local json = require "dromozoa.json"
 local run = require "dromozoa.ubench.run"
 
-local column_metatable = {}
+local format = string.format
 
-function column_metatable:__len()
-  return #self._m
+local B = assert(loadfile(arg[1]))()
+local F = {}
+for i = 1, #B do
+  F[i] = B[i][2]
 end
 
-function column_metatable:__index(key)
-  return self._m[key][self._j]
+local R = run(F, 500, 1000)
+
+io.write("return {\n")
+for i = 1, #R do
+  local v = R[i]
+  io.write(format("{ %.17g, %.17g };\n", v[1], v[2]))
 end
-
-function column_metatable:__newindex(key, value)
-  self._m[key][self._j] = value
-end
-
-local function column(m, j)
-  return setmetatable({ _m = m; _j = j }, column_metatable)
-end
-
-local bench = {
-  { "BASE", function ()
-    local out = {}
-    local n1, n2 = 1, 2
-    return out
-  end };
-  { "4", function ()
-    local out = {}
-    local n1, n2 = 1, 2
-    out = n1 + n2 out = n1 + n2 out = n1 + n2 out = n1 + n2
-    return out
-  end };
-  { "8", function ()
-    local out = {}
-    local n1, n2 = 1, 2
-    out = n1 + n2 out = n1 + n2 out = n1 + n2 out = n1 + n2
-    out = n1 + n2 out = n1 + n2 out = n1 + n2 out = n1 + n2
-    return out
-  end };
-  { "12", function ()
-    local out = {}
-    local n1, n2 = 1, 2
-    out = n1 + n2 out = n1 + n2 out = n1 + n2 out = n1 + n2
-    out = n1 + n2 out = n1 + n2 out = n1 + n2 out = n1 + n2
-    out = n1 + n2 out = n1 + n2 out = n1 + n2 out = n1 + n2
-    return out
-  end };
-  { "16", function ()
-    local out = {}
-    local n1, n2 = 1, 2
-    out = n1 + n2 out = n1 + n2 out = n1 + n2 out = n1 + n2
-    out = n1 + n2 out = n1 + n2 out = n1 + n2 out = n1 + n2
-    out = n1 + n2 out = n1 + n2 out = n1 + n2 out = n1 + n2
-    out = n1 + n2 out = n1 + n2 out = n1 + n2 out = n1 + n2
-    return out
-  end };
-}
-
-local result = run(column(bench, 2), 500, 1000)
-
-for i = 1, #result do
-  print(i, result[i][2])
-end
-
---[[
-os.exit()
-
-local name = ...
-local ubench = require(name)
-
-local result = {}
-for i = 1, #ubench do
-  local v = ubench[i]
-  local s, a = run(1000, 1000, v[2])
-  io.stderr:write(i, "\n")
-  result[#result + 1] = { v[1], s, a, v[3] }
-end
-io.write(json.encode(result), "\n")
-]]
+io.write("}\n")
