@@ -153,7 +153,7 @@ for i = 1, #def do
     if debug then
       write(io.stdout, name, 4, code, opts)
     else
-      for j = 0, 32 do
+      for j = 8, 32, 2 do
         write(io.stdout, name, j, code, opts)
       end
     end

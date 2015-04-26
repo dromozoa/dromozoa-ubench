@@ -44,8 +44,12 @@ for i = 1, #B do
   end
 end
 
+local range_a, range_b = arg[2]:match("^(%d+):(%d+)$")
+range_a = tonumber(range_a)
+range_b = tonumber(range_b)
+
 local A = {}
-for i = 2, #arg do
+for i = 3, #arg do
   local R = assert(loadfile(arg[i]))()
   for j = 1, #R do
     local a = A[j]
@@ -73,7 +77,23 @@ local A = {}
 local B = {}
 for i = 1, #N do
   local name = N[i]
-  A[name], B[name] = linest(Y[name], X[name])
+  local y
+  local x
+  if range_a and range_b then
+    y = {}
+    x = {}
+    for i = 1, #X[name] do
+      local v = X[name][i]
+      if range_a <= v and v <= range_b then
+        y[#y + 1] = Y[name][i]
+        x[#x + 1] = v
+      end
+    end
+  else
+    y = Y[name]
+    x = X[name]
+  end
+  A[name], B[name] = linest(y, x)
 end
 
 io.write("Name")
