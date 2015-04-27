@@ -25,7 +25,7 @@ local B = assert(loadfile(arg[1]))()
 local K = {}
 local N = {}
 local X = {}
-local C = {}
+local O = {}
 for i = 1, #B do
   local key = B[i][1]
   K[key] = i
@@ -39,8 +39,8 @@ for i = 1, #B do
     N[#N + 1] = name
     X[name] = { n }
   end
-  if not C[name] then
-    C[name] = B[i][3] or {}
+  if not O[name] then
+    O[name] = B[i][3] or {}
   end
 end
 
@@ -75,6 +75,8 @@ end
 
 local A = {}
 local B = {}
+local C = {}
+local D = {}
 for i = 1, #N do
   local name = N[i]
   local y
@@ -93,7 +95,15 @@ for i = 1, #N do
     y = Y[name]
     x = X[name]
   end
-  A[name], B[name] = linest(y, x)
+  local a, b = linest(y, x)
+  A[name], B[name] = a, b
+  local c = a
+  for k, v in pairs(O[name]) do
+    io.stderr:write(format("%s\t%s\t%d\t%.17g\n", name, k, v, C[k]))
+    c = c - C[k] * v
+  end
+  C[name] = c
+  D[name] = c / C[N[1]]
 end
 
 io.write("Name")
@@ -101,7 +111,7 @@ local x = X[N[1]]
 for i = 1, #x do
   io.write(format("\t%d", x[i]))
 end
-io.write("\tA\tB\n")
+io.write("\tA\tB\tC\tD\n")
 
 for i = 1, #N do
   local name = N[i]
@@ -110,5 +120,5 @@ for i = 1, #N do
   for j = 1, #y do
     io.write(format("\t%.17g", y[j]))
   end
-  io.write(format("\t%.17g\t%.17g\n", A[name], B[name]))
+  io.write(format("\t%.17g\t%.17g\t%.17g\t%.17g\n", A[name], B[name], C[name], D[name]))
 end
