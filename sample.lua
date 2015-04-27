@@ -15,18 +15,22 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local run1 = require "dromozoa.ubench.run1"
-local stdev = require "dromozoa.ubench.stdev"
+local loadstring = loadstring or load
 
-return function (m, n, fn)
-  local data = {}
-  for i = 1, m do
-    data[i] = run1(n, fn) / n
+local B = {}
+
+for i = 0, 32 do
+  local code = {}
+  code[#code + 1] = [[
+return function ()
+  local out
+  local n1, n2 = 1, 2
+]]
+  for j = 1, i do
+    code[#code + 1] = "  out = n1 + n2\n"
   end
-  table.sort(data)
-  local a = m / 8
-  local b = a * 3
-  a = a - a % 1
-  b = b - b % 1
-  return stdev.s(data, a, b)
+  code[#code + 1] = "end\n"
+  B[#B + 1] = { "ADD/" .. i, assert(loadstring(table.concat(code)))() }
 end
+
+return B

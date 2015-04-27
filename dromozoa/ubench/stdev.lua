@@ -15,13 +15,22 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local average = require "dromozoa.ubench.average"
-
-local function stdev(data, i, j, n)
-  local a = average(data, i, j)
+local function average(V, i, j)
+  local n = j - i + 1
   local u = 0
   while i <= j do
-    local v = data[i] - a
+    local v = V[i]
+    u = u + v
+    i = i + 1
+  end
+  return u / n
+end
+
+local function stdev(V, i, j, n)
+  local a = average(V, i, j)
+  local u = 0
+  while i <= j do
+    local v = V[i] - a
     u = u + v * v
     i = i + 1
   end
@@ -30,15 +39,15 @@ end
 
 return {
   -- population
-  p = function (data, i, j)
+  p = function (V, i, j)
     if not i then i = 1 end
-    if not j then j = #data end
-    return stdev(data, i, j, j - i + 1)
+    if not j then j = #V end
+    return stdev(V, i, j, j - i + 1)
   end;
   -- sample
-  s = function (data, i, j)
+  s = function (V, i, j)
     if not i then i = 1 end
-    if not j then j = #data end
-    return stdev(data, i, j, j - i)
+    if not j then j = #V end
+    return stdev(V, i, j, j - i)
   end;
 }

@@ -17,17 +17,22 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local json = require "dromozoa.json"
 local run = require "dromozoa.ubench.run"
 
-local name = ...
-local ubench = require(name)
+local format = string.format
 
-local result = {}
-for i = 1, #ubench do
-  local v = ubench[i]
-  local s, a = run(1000, 1000, v[2])
-  io.stderr:write(i, "\n")
-  result[#result + 1] = { v[1], s, a, v[3] }
+local B = assert(loadfile(arg[1]))()
+
+local F = {}
+for i = 1, #B do
+  F[i] = B[i][2]
 end
-io.write(json.encode(result), "\n")
+
+local R = run(F, 500, 1000)
+
+io.write("return {\n")
+for i = 1, #R do
+  local v = R[i]
+  io.write(format("{ %.17g, %.17g };\n", v[1], v[2]))
+end
+io.write("}\n")

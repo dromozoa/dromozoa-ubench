@@ -1,3 +1,5 @@
+#! /usr/bin/env lua
+
 -- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
@@ -17,23 +19,40 @@
 
 local format = string.format
 
-local DEBUG = ...
+local version
+local debug
+for i = 1, #arg do
+  local v = arg[i]
+  if v:match("^%d+%.%d+$") then
+    version = v
+  elseif v:lower() == "debug" then
+    debug = true
+  end
+end
+
+if not version then
+  version = _VERSION
+end
+local major_version, minor_version = version:match("(%d+)%.(%d+)")
+major_version = assert(tonumber(major_version))
+minor_version = assert(tonumber(minor_version))
+local version_number = major_version * 16 + minor_version
 
 local function write(out, name, n, code, opts)
   local key = format("%s/%d", name, n)
   out:write(format([[
-ubench[#ubench + 1] = { %q, function (...)
+B[#B + 1] = { %q, function (...)
 local out
 local b0, b1 = false, true
 local n1, n2 = 1, 2
 local s1, s2 = "foo", "bar"
 local t = ut
-local fc, ft, fi = call, tailcall, inline
+local f0, fc, ft = call0, call, tailcall
 ]], key))
   for i = 1, n do
     out:write(code, "\n")
   end
-  if DEBUG then
+  if debug then
     out:write "print(out)\n"
   end
   out:write [[
@@ -45,13 +64,12 @@ end, {
   out:write [[
 } }
 ]]
-  if DEBUG then
-    out:write("ubench[#ubench][2]()\n")
+  if debug then
+    out:write("B[#B][2]()\n")
   end
 end
 
-local tbl = {
-  { "NOOP",     "" };
+local def = {
   { "MOVE",     "out = n1" };
   { "LOADK",    "out = 42" };
   { "LOADBOOL", "out = true" };
@@ -84,11 +102,21 @@ local tbl = {
   { "LE",       "if n1 <= n2 then out = n1 + n2 end", { ADD = 1 } };
   { "TEST",     "if b1 then out = n1 + n2 end",       { ADD = 1 } };
   { "TESTSET",  "out = b1 or n1" };
-  { "CALL_C",   "out = fc(n1, n2)", { CALL_I = 1 } };
-  { "CALL_T",   "out = ft(n1, n2)", { CALL_I = 1 } };
-  { "CALL_I",   "out = fi(n1, n2)", { MOVE = 5, GETUPVAL = 1, ADD } };
+  { "CALL0",    "out = f0(n1, n2)", { MOVE = 5, GETUPVAL = 1, ADD = 1 } };
+  { "CALL",     "out = fc(n1, n2)", { CALL0 = 1 } };
+  { "TAILCALL", "out = ft(n1, n2)", { CALL0 = 1 } };
   { "CLOSURE",  "out = function () end", { MOVE = 1 } };
   { "VARARG",   "out = ..." };
+}
+
+local lua53_def = {
+  IDIV = true;
+  BAND = true;
+  BOR  = true;
+  BXOR = true;
+  SHL  = true;
+  SHR  = true;
+  BNOT = true;
 }
 
 io.write [[
@@ -96,60 +124,41 @@ local function add(a, b)
   return a + b
 end
 
--- GETUPVAL
--- MOVE
--- MOVE
--- CALL
---   ADD
---   RETURN
--- RETURN
-local function call(a, b)
-  local out = add(a, b)
-  return out
-end
-
--- GETUPVAL
--- MOVE
--- MOVE
--- TAILCALL
---   ADD
---   RETURN
--- RETURN
-local function tailcall(a, b)
-  return add(a, b)
-end
-
--- GETUPVAL
--- MOVE
--- MOVE
--- ADD
--- RETURN
-local function inline(a, b)
+local function call0(a, b)
   local out, a, b = add, a, b
   out = a + b
   return out
 end
 
+local function call(a, b)
+  local out = add(a, b)
+  return out
+end
+
+local function tailcall(a, b)
+  return add(a, b)
+end
+
 local un = 1, 2
 local ut = { 1, 2, 3, 4, 5, 6, 7, 8 }
-local ubench = {}
+local B = {}
 ]]
-for i = 1, #tbl do
-  local v = tbl[i]
+for i = 1, #def do
+  local v = def[i]
   local name = v[1]
   local code = v[2]
-  local opts = v[3]
-  if not opts then
-    opts = {}
-  end
-  if DEBUG then
-    write(io.stdout, name, 4, code, opts)
-  else
-    for j = 4, 32, 4 do
-      write(io.stdout, name, j, code, opts)
+  local opts = v[3] or {}
+
+  if version_number >= 83 or not lua53_def[name] then
+    if debug then
+      write(io.stdout, name, 4, code, opts)
+    else
+      for j = 8, 32, 2 do
+        write(io.stdout, name, j, code, opts)
+      end
     end
   end
 end
 io.write [[
-return ubench
+return B
 ]]

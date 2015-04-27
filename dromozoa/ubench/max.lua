@@ -15,12 +15,12 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-return function (data, i, j)
+return function (V, i, j)
   if not i then i = 1 end
-  if not j then j = #data end
-  local max = data[i]
+  if not j then j = #V end
+  local max = V[i]
   for i = i + 1, j do
-    local v = data[i]
+    local v = V[i]
     if max < v then
       max = v
     end
