@@ -1,3 +1,5 @@
+#! /usr/bin/env lua
+
 -- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
@@ -15,12 +17,22 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local function tarai(x, y, z)
-  if x <= y then
-    return y
-  else
-    return tarai(tarai(x - 1, y, z), tarai(y - 1, z, x), tarai(z - 1, x, y))
-  end
+local run = require "dromozoa.ubench.run"
+
+local format = string.format
+
+local B = assert(loadfile(arg[1]))()
+
+local F = {}
+for i = 1, #B do
+  F[i] = B[i][2]
 end
 
-return tarai
+local R = run(F, 500, 1000)
+
+io.write("return {\n")
+for i = 1, #R do
+  local v = R[i]
+  io.write(format("{ %.17g, %.17g };\n", v[1], v[2]))
+end
+io.write("}\n")
