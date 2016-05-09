@@ -1,8 +1,7 @@
 package = "dromozoa-ubench"
 version = "1.1-1"
 source = {
-  url = "https://github.com/dromozoa/dromozoa-ubench/archive/v1.1.tar.gz";
-  file = "dromozoa-ubench-1.1.tar.gz";
+  url = "https://github.com/dromozoa/dromozoa-ubench/releases/download/v1.1/dromozoa-ubench-1.1.tar.gz";
 }
 description = {
   summary = "Microbenchmark utility";
@@ -11,19 +10,7 @@ description = {
   maintainer = "Tomoyuki Fujimori <moyu@dromozoa.com>";
 }
 build = {
-  type = "builtin";
-  modules = {
-    ["dromozoa.ubench.gettimeofday"] = "dromozoa/ubench/gettimeofday.c";
-    ["dromozoa.ubench.linest"] = "dromozoa/ubench/linest.lua";
-    ["dromozoa.ubench.max"] = "dromozoa/ubench/max.lua";
-    ["dromozoa.ubench.min"] = "dromozoa/ubench/min.lua";
-    ["dromozoa.ubench.nanosleep"] = "dromozoa/ubench/nanosleep.c";
-    ["dromozoa.ubench.run"] = "dromozoa/ubench/run.lua";
-    ["dromozoa.ubench.stdev"] = "dromozoa/ubench/stdev.lua";
-  };
-  install = {
-    bin = {
-      ["dromozoa-ubench-run"] = "dromozoa-ubench-run";
-    };
-  };
+  type = "command";
+  build_command = "env PATH=\"$(LUA_BINDIR):$PATH\" CPPFLAGS='-I$(LUA_INCDIR)' CXXFLAGS='-Wall -W -Wno-missing-field-initializers $(CFLAGS)' LDFLAGS='-L$(LUA_LIBDIR)' LUA='$(LUA)' ./configure --prefix='$(PREFIX)' && make";
+  install_command = "make luadir='$(LUADIR)' luaexecdir='$(LIBDIR)/dromozoa' install";
 }
