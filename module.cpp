@@ -30,11 +30,22 @@
 
 namespace dromozoa {
   namespace {
-#if defined(HAVE_MACH_ABSOLUTE_TIME)
+#if defined(HAVE_CLOCK_GETTIME)
+    void timer_impl(struct timespec& tv) {
+      clock_gettime(CLOCK_MONOTONIC, &tv);
+    }
+#elif defined(HAVE_MACH_ABSOLUTE_TIME)
     void timer_impl(struct timespec& tv) {
       uint64_t t = mach_absolute_time();
       tv.tv_sec = t / 1000000000;
       tv.tv_nsec = t % 1000000000;
+    }
+#else
+    void timer_impl(struct timespec& tv) {
+      struct timeval t = {};
+      gettimeofday(&tv, 0);
+      tv.tv_sec = t.tv_sec;
+      tv.tv_nsec = t.tv_usec * 1000;
     }
 #endif
 
