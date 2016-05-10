@@ -30,7 +30,7 @@ namespace dromozoa {
     }
   }
 
-  void initialize_cpu(lua_State* L) {
+  void initialize_sys_sysinfo(lua_State* L) {
     luaX_set_field(L, -1, "get_nprocs", impl_get_nprocs);
     luaX_set_field(L, -1, "get_nprocs_conf", impl_get_nprocs_conf);
   }

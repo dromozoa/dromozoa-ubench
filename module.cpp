@@ -18,11 +18,13 @@
 #include <dromozoa/bind.hpp>
 
 namespace dromozoa {
-  void initialize_cpu(lua_State* L);
+  void initialize_sched(lua_State* L);
+  void initialize_sys_sysinfo(lua_State* L);
   void initialize_timer(lua_State* L);
 
   void initialize(lua_State* L) {
-    initialize_cpu(L);
+    initialize_sched(L);
+    initialize_sys_sysinfo(L);
     initialize_timer(L);
   }
 }
