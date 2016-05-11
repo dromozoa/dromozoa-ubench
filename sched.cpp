@@ -66,10 +66,48 @@ namespace dromozoa {
         luaX_push_success(L);
       }
     }
+
+    void impl_get_priority_min(lua_State* L) {
+      int policy = luaX_check_integer<int>(L, 1);
+      int result = sched_get_priority_min(policy);
+      if (result == -1) {
+      } else {
+        luaX_push(L, result);
+      }
+    }
+
+    void impl_get_priority_max(lua_State* L) {
+      int policy = luaX_check_integer<int>(L, 1);
+      int result = sched_get_priority_max(policy);
+      if (result == -1) {
+      } else {
+        luaX_push(L, result);
+      }
+    }
+
+    void impl_setscheduler(lua_State* L) {
+      pid_t pid = luaX_check_integer<pid_t>(L, 1);
+      int policy = luaX_check_integer<int>(L, 2);
+      int priority = luaX_check_integer<int>(L, 3);
+      struct sched_param param = {};
+      param.sched_priority = priority;
+      if (sched_setscheduler(pid, policy, &param) == -1) {
+      } else {
+        luaX_push_success(L);
+      }
+    }
   }
 
   void initialize_sched(lua_State* L) {
     luaX_set_field(L, -1, "getaffinity", impl_getaffinity);
     luaX_set_field(L, -1, "setaffinity", impl_setaffinity);
+    luaX_set_field(L, -1, "get_priority_min", impl_get_priority_min);
+    luaX_set_field(L, -1, "get_priority_max", impl_get_priority_max);
+    luaX_set_field(L, -1, "setscheduler", impl_setscheduler);
+    luaX_set_field(L, -1, "SCHED_OTHER", SCHED_OTHER);
+    luaX_set_field(L, -1, "SCHED_BATCH", SCHED_BATCH);
+    luaX_set_field(L, -1, "SCHED_IDLE", SCHED_IDLE);
+    luaX_set_field(L, -1, "SCHED_FIFO", SCHED_FIFO);
+    luaX_set_field(L, -1, "SCHED_RR", SCHED_RR);
   }
 }

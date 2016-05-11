@@ -32,7 +32,9 @@ namespace dromozoa {
   namespace {
 #if defined(HAVE_CLOCK_GETTIME)
     void timer_impl(struct timespec& tv) {
-      clock_gettime(CLOCK_MONOTONIC, &tv);
+      // clock_gettime(CLOCK_MONOTONIC, &tv);
+      clock_gettime(CLOCK_MONOTONIC_RAW, &tv);
+      // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tv);
     }
 #elif defined(HAVE_MACH_ABSOLUTE_TIME)
     void timer_impl(struct timespec& tv) {
