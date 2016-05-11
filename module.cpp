@@ -15,9 +15,38 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <errno.h>
+#include <string.h>
+#include <sys/mman.h>
+
 #include <dromozoa/bind.hpp>
 
 namespace dromozoa {
+  namespace {
+    void impl_mlockall(lua_State* L) {
+      int flags = luaX_check_integer<int>(L, 1);
+
+      if (mlockall(flags) == -1) {
+        luaX_push(L, luaX_nil);
+        luaX_push(L, errno);
+      } else {
+        luaX_push_success(L);
+      }
+
+      char buffer[8192];
+      memset(buffer, 0, 8192);
+    }
+
+    void impl_munlockall(lua_State* L) {
+      if (munlockall() == -1) {
+        luaX_push(L, luaX_nil);
+        luaX_push(L, errno);
+      } else {
+        luaX_push_success(L);
+      }
+    }
+  }
+
   void initialize_sched(lua_State* L);
   void initialize_sys_sysinfo(lua_State* L);
   void initialize_timer(lua_State* L);
@@ -26,6 +55,11 @@ namespace dromozoa {
     initialize_sched(L);
     initialize_sys_sysinfo(L);
     initialize_timer(L);
+
+    luaX_set_field(L, -1, "mlockall", impl_mlockall);
+    luaX_set_field(L, -1, "munlockall", impl_munlockall);
+    luaX_set_field(L, -1, "MCL_CURRENT", MCL_CURRENT);
+    luaX_set_field(L, -1, "MCL_FUTURE", MCL_FUTURE);
   }
 }
 
