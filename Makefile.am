@@ -19,4 +19,8 @@ luaexec_LTLIBRARIES = ubench.la
 
 ubench_la_CPPFLAGS = -I$(top_srcdir)/bind -I$(top_srcdir)/include
 ubench_la_LDFLAGS = -module -avoid-version -shared
-ubench_la_SOURCES = module.cpp
+ubench_la_SOURCES = \
+	module.cpp \
+	sched.cpp \
+	sys_sysinfo.cpp \
+	timer.cpp

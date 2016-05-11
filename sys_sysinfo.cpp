@@ -15,22 +15,23 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <sys/sysinfo.h>
+
 #include <dromozoa/bind.hpp>
 
 namespace dromozoa {
-  void initialize_sched(lua_State* L);
-  void initialize_sys_sysinfo(lua_State* L);
-  void initialize_timer(lua_State* L);
+  namespace {
+    void impl_get_nprocs(lua_State* L) {
+      luaX_push(L, get_nprocs());
+    }
 
-  void initialize(lua_State* L) {
-    initialize_sched(L);
-    initialize_sys_sysinfo(L);
-    initialize_timer(L);
+    void impl_get_nprocs_conf(lua_State* L) {
+      luaX_push(L, get_nprocs_conf());
+    }
   }
-}
 
-extern "C" int luaopen_dromozoa_ubench(lua_State* L) {
-  lua_newtable(L);
-  dromozoa::initialize(L);
-  return 1;
+  void initialize_sys_sysinfo(lua_State* L) {
+    luaX_set_field(L, -1, "get_nprocs", impl_get_nprocs);
+    luaX_set_field(L, -1, "get_nprocs_conf", impl_get_nprocs_conf);
+  }
 }
