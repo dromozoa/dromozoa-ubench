@@ -30,7 +30,7 @@ local x = 42.0
 
 collectgarbage("stop")
 
-ubench.mlockall(flags)
+ubench.mlockall(flags, 1024 * 1024)
 
 for i = 1, N do
   collectgarbage()
