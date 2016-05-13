@@ -10,6 +10,9 @@ description = {
   homepage = "https://github.com/dromozoa/dromozoa-ubench/";
   maintainer = "Tomoyuki Fujimori <moyu@dromozoa.com>";
 }
+dependencies = {
+  "dromozoa-unix";
+}
 build = {
   type = "builtin";
   modules = {
