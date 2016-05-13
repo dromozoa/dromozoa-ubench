@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <alloca.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -25,6 +26,7 @@ namespace dromozoa {
   namespace {
     void impl_mlockall(lua_State* L) {
       int flags = luaX_check_integer<int>(L, 1);
+      size_t size = luaX_opt_integer<size_t>(L, 2, 8192);
 
       if (mlockall(flags) == -1) {
         luaX_push(L, luaX_nil);
@@ -33,8 +35,9 @@ namespace dromozoa {
         luaX_push_success(L);
       }
 
-      char buffer[8192];
-      memset(buffer, 0, 8192);
+      // char buffer[8192];
+      char* buffer = static_cast<char*>(alloca(size));
+      memset(buffer, 0, size);
     }
 
     void impl_munlockall(lua_State* L) {
