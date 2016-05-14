@@ -16,11 +16,9 @@ dependencies = {
 build = {
   type = "builtin";
   modules = {
-    ["dromozoa.ubench.gettimeofday"] = "dromozoa/ubench/gettimeofday.c";
     ["dromozoa.ubench.linest"] = "dromozoa/ubench/linest.lua";
     ["dromozoa.ubench.max"] = "dromozoa/ubench/max.lua";
     ["dromozoa.ubench.min"] = "dromozoa/ubench/min.lua";
-    ["dromozoa.ubench.nanosleep"] = "dromozoa/ubench/nanosleep.c";
     ["dromozoa.ubench.run"] = "dromozoa/ubench/run.lua";
     ["dromozoa.ubench.stdev"] = "dromozoa/ubench/stdev.lua";
   };

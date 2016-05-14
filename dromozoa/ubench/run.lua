@@ -15,27 +15,22 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local gettimeofday = require "dromozoa.ubench.gettimeofday"
-local nanosleep = require "dromozoa.ubench.nanosleep"
+local unix = require "dromozoa.unix"
 local stdev = require "dromozoa.ubench.stdev"
 
 local function run(n, f)
+  local timer = unix.timer()
+
   collectgarbage()
   collectgarbage()
 
-  local tv1 = gettimeofday()
+  timer:start()
   for i = 1, n do
     f()
   end
-  local tv2 = gettimeofday()
+  timer:stop()
 
-  local s = tv2.tv_sec - tv1.tv_sec
-  local u = tv2.tv_usec - tv1.tv_usec
-  if u < 0 then
-    s = s - 1
-    u = u + 1000000
-  end
-  return s * 1000000 + u
+  return timer:elapsed() * 1000000
 end
 
 local function estimate(u, f)
@@ -71,10 +66,10 @@ return function (F, m, u)
     for i = 1, #F do
       local n = N[i]
       T[i][j] = run(n, F[i]) / n
-      nanosleep { tv_sec = 0; tv_nsec = 1000000 }
+      unix.nanosleep { tv_sec = 0; tv_nsec = 1000000 }
     end
     io.stderr:write(j, "/", m, "\n")
-    nanosleep { tv_sec = 0; tv_nsec = 1000000 }
+    unix.nanosleep { tv_sec = 0; tv_nsec = 1000000 }
   end
 
   local a = m / 8
