@@ -17,6 +17,22 @@
 
 local unix = require "dromozoa.unix"
 
+local function fibonacci(n)
+  if n < 2 then
+    return n
+  else
+    return fibonacci(n - 2) + fibonacci(n - 1)
+  end
+end
+
+local function tarai(x, y, z)
+  if x <= y then
+    return y
+  else
+    return tarai(tarai(x - 1, y, z), tarai(y - 1, z, x), tarai(z - 1, x, y))
+  end
+end
+
 local function run(n, f, context, ...)
   local timer = unix.timer()
 
@@ -51,6 +67,10 @@ local function estimate(t, f, context, ...)
     end
     n = m
   end
+end
+
+local function f()
+  return fibonacci(5)
 end
 
 local n = estimate(0.001, f, {}, 2)
