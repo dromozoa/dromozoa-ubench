@@ -1,4 +1,4 @@
--- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -16,9 +16,24 @@
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
 local unix = require "dromozoa.unix"
-local stdev = require "dromozoa.ubench.stdev"
 
-local function run(n, f)
+local function fibonacci(n)
+  if n < 2 then
+    return n
+  else
+    return fibonacci(n - 2) + fibonacci(n - 1)
+  end
+end
+
+local function tarai(x, y, z)
+  if x <= y then
+    return y
+  else
+    return tarai(tarai(x - 1, y, z), tarai(y - 1, z, x), tarai(z - 1, x, y))
+  end
+end
+
+local function run(n, f, context, ...)
   local timer = unix.timer()
 
   collectgarbage()
@@ -26,26 +41,27 @@ local function run(n, f)
 
   timer:start()
   for i = 1, n do
-    f()
+    context = f(context, ...)
   end
   timer:stop()
 
-  return timer:elapsed() * 1000000
+  return timer:elapsed()
 end
 
-local function estimate(u, f)
-  local a = u * 0.99
-  local b = u * 1.01
+local function estimate(t, f, context, ...)
+  local a = t * 0.99
+  local b = t * 1.01
   local n = 1
   while true do
-    local t = run(n, f)
-    if a <= t and t < b then
+    local elapsed = run(n, f, context, ...)
+    print(n, elapsed)
+    if a <= elapsed and elapsed < b then
       return n
     end
-    if t < 1 then t = 1 end
-    local m = n * u / t
-    m = m - m % 1
-    if m < 1 then m = 1 end
+    local m = n * t / elapsed
+    if m < 1 then
+      m = 1
+    end
     if n == m then
       return n
     end
@@ -53,35 +69,18 @@ local function estimate(u, f)
   end
 end
 
-return function (F, m, u)
-  local N = {}
-  local T = {}
+local function f()
+  return fibonacci(5)
+end
 
-  for i = 1, #F do
-    N[i] = estimate(u, F[i])
-    T[i] = {}
-  end
+local n = estimate(0.001, f, {}, 2)
+local N = 1000
 
-  for j = 1, m do
-    for i = 1, #F do
-      local n = N[i]
-      T[i][j] = run(n, F[i]) / n
-      unix.nanosleep { tv_sec = 0; tv_nsec = 1000000 }
-    end
-    io.stderr:write(j, "/", m, "\n")
-    unix.nanosleep { tv_sec = 0; tv_nsec = 1000000 }
-  end
+local data = {}
+for i = 1, N do
+  data[i] = run(n, f, {}, 2)
+end
 
-  local a = m / 8
-  local b = a * 3
-  a = a - a % 1
-  b = b - b % 1
-
-  local R = {}
-  for i = 1, #T do
-    table.sort(T[i])
-    R[i] = { stdev.s(T[i], a, b) }
-  end
-
-  return R
+for i = 1, N do
+  -- print(data[i])
 end
