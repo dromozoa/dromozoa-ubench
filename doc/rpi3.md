@@ -1,5 +1,7 @@
 # Raspberry Pi 3におけるマイクロベンチマーク
 
+安定したマイクロベンチマークを実施するために有用だった設定項目について述べます。効果が認められなかった項目については述べません。
+
 ## CPUスケーリングガバナー
 
 ``` console
@@ -38,7 +40,7 @@ assert(unix.sched_setaffinity(unix.getpid(), { 3 }))
 ``` lua
 local unix = require "dromozoa.unix"
 assert(unix.sched_setscheduler(unix.getpid(), unix.SCHED_FIFO, {
-  sched_priority = unix.sched_get_priority_max(unix.SCHED_FIFO) - 1
+  sched_priority = unix.sched_get_priority_max(unix.SCHED_FIFO) - 1;
 }))
 ```
 
