@@ -46,6 +46,7 @@ local function run(n, f, context, ...)
 
   collectgarbage()
   collectgarbage()
+  -- collectgarbage("stop")
 
   timer:start()
   for i = 1, n do
@@ -95,10 +96,11 @@ for _, v in ipairs(arg) do
 end
 
 if options.scheduler then
+  local scheduler = unix.SCHED_FIFO
   local param = {
-    sched_priority = unix.sched_get_priority_min(unix.SCHED_FIFO);
+    sched_priority = unix.sched_get_priority_max(scheduler) - 1;
   }
-  assert(unix.sched_setscheduler(pid, unix.SCHED_FIFO, param))
+  assert(unix.sched_setscheduler(pid, scheduler, param))
 end
 
 if options.affinity then
@@ -124,20 +126,27 @@ if options.mlockall then
   assert(unix.munlockall())
 end
 
--- print("min", min(data))
--- print("max", max(data))
--- print("stdev.p", stdev.p(data))
--- print("stdev.s", stdev.s(data))
-
 table.sort(data)
+local data_in = data
+local data = sequence()
+local X = math.floor(N / 5)
+-- local X = 1
+for i = X, N - X do
+  if options.yield then
+    unix.sched_yield()
+  end
+  data:push(data_in[i])
+end
+
+print("min", min(data))
+print("max", max(data))
+print("stdev.p", stdev.p(data))
+print("stdev.s", stdev.s(data))
 
 local now = os.date("%Y%m%d%H%M%S")
 local out = assert(io.open("data-" .. now .. ".txt", "w"))
 out:write("#", comments:push(now):concat(" "), "\n")
-for i = 1, N do
-  if options.yield then
-    unix.sched_yield()
-  end
-  out:write(("%.17g\n"):format(data[i]))
+for v in data:each() do
+  out:write(("%.17g\n"):format(v))
 end
 out:close()
