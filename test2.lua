@@ -1,4 +1,4 @@
--- Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -16,6 +16,9 @@
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
 local unix = require "dromozoa.unix"
+local max = require "dromozoa.ubench.max"
+local min = require "dromozoa.ubench.min"
+local stdev = require "dromozoa.ubench.stdev"
 
 local function fibonacci(n)
   if n < 2 then
@@ -81,6 +84,7 @@ for i = 1, N do
   data[i] = run(n, f, {}, 2)
 end
 
-for i = 1, N do
-  -- print(data[i])
-end
+print("min", min(data))
+print("max", max(data))
+print("stdev.p", stdev.p(data))
+print("stdev.s", stdev.s(data))
