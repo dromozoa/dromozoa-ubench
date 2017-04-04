@@ -1,14 +1,14 @@
-# Raspberry Pi 3によるマイクロベンチマーク
+# Raspberry Pi 3におけるマイクロベンチマーク
 
-## scaling governor
+## CPUスケーリングガバナー
 
-```
+``` console
 sudo sh -c 'echo performance >/sys/devices/system/cpu/cpufreq/policy0/scaling_governor'
 ```
 
 cpufrequtilsが利用可能ならば、cpufreq-setコマンドで設定することもできます。
 
-```
+``` console
 sudo cpufreq-set --governor performance
 ```
 
@@ -52,7 +52,7 @@ local unix = require "dromozoa.unix"
 assert(unix.mlockall(uint32.bor(unix.MCL_CURRENT, unix.MCL_FUTURE)))
 ```
 
-## 参考
+## 参考リンク
 
 * [RT PREEMPT HOWTO](https://rt.wiki.kernel.org/index.php/RT_PREEMPT_HOWTO)
 * [RHEL7 | パフォーマンスチューニングガイド](https://access.redhat.com/site/documentation/ja-JP/Red_Hat_Enterprise_Linux/7/html/Performance_Tuning_Guide/index.html)
