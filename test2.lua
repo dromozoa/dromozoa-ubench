@@ -15,6 +15,11 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
+local ipairs = require "dromozoa.commons.ipairs"
+local json = require "dromozoa.commons.json"
+local sequence = require "dromozoa.commons.sequence"
+local uint32 = require "dromozoa.commons.uint32"
+
 local unix = require "dromozoa.unix"
 local max = require "dromozoa.ubench.max"
 local min = require "dromozoa.ubench.min"
@@ -76,15 +81,63 @@ local function f()
   return fibonacci(5)
 end
 
-local n = estimate(0.001, f, {}, 2)
+-- local n = estimate(0.001, f, {}, 2)
+local n = 200
 local N = 1000
+
+local pid = unix.getpid()
+local options = {}
+local comments = sequence()
+
+for _, v in ipairs(arg) do
+  options[v] = true
+  comments:push(v)
+end
+
+if options.scheduler then
+  local param = {
+    sched_priority = unix.sched_get_priority_min(unix.SCHED_FIFO);
+  }
+  assert(unix.sched_setscheduler(pid, unix.SCHED_FIFO, param))
+end
+
+if options.affinity then
+  local affinity = unix.sched_getaffinity(pid)
+  print(json.encode(affinity))
+  assert(unix.sched_setaffinity(pid, { 3 }))
+end
+
+if options.mlockall then
+  assert(unix.mlockall(uint32.bor(unix.MCL_CURRENT, unix.MCL_FUTURE)))
+end
+
+if options.reserve_stack_pages then
+  assert(unix.reserve_stack_pages(8192))
+end
 
 local data = {}
 for i = 1, N do
   data[i] = run(n, f, {}, 2)
 end
 
-print("min", min(data))
-print("max", max(data))
-print("stdev.p", stdev.p(data))
-print("stdev.s", stdev.s(data))
+if options.mlockall then
+  assert(unix.munlockall())
+end
+
+-- print("min", min(data))
+-- print("max", max(data))
+-- print("stdev.p", stdev.p(data))
+-- print("stdev.s", stdev.s(data))
+
+table.sort(data)
+
+local now = os.date("%Y%m%d%H%M%S")
+local out = assert(io.open("data-" .. now .. ".txt", "w"))
+out:write("#", comments:push(now):concat(" "), "\n")
+for i = 1, N do
+  if options.yield then
+    unix.sched_yield()
+  end
+  out:write(("%.17g\n"):format(data[i]))
+end
+out:close()
