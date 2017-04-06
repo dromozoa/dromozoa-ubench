@@ -17,80 +17,65 @@
 
 local empty = require "dromozoa.commons.empty"
 
-local function linest_y(Y)
+local function linest1(Y, X)
   local sum_x = 0
   local sum_y = 0
   local sum_xx = 0
   local sum_xy = 0
   local n = #Y
-  for x = 1, n do
-    local y = Y[x]
-    sum_x = sum_x + x
-    sum_y = sum_y + y
-    sum_xx = sum_xx + x * x
-    sum_xy = sum_xy + x * y
+
+  if X == nil or empty(X) then
+    for x = 1, n do
+      local y = Y[x]
+      sum_x = sum_x + x
+      sum_y = sum_y + y
+      sum_xx = sum_xx + x * x
+      sum_xy = sum_xy + x * y
+    end
+  else
+    for i = 1, n do
+      local x = X[i]
+      local y = Y[i]
+      sum_x = sum_x + x
+      sum_y = sum_y + y
+      sum_xx = sum_xx + x * x
+      sum_xy = sum_xy + x * y
+    end
   end
+
   local d = n * sum_xx - sum_x * sum_x
   return (n * sum_xy - sum_x * sum_y) / d, (sum_y * sum_xx - sum_x * sum_xy) / d
 end
 
-local function linest_yx(Y, X)
+local function linest1k(Y, X, b)
   local sum_x = 0
-  local sum_y = 0
   local sum_xx = 0
   local sum_xy = 0
-  local n = #Y
-  for i = 1, n do
-    local x = X[i]
-    local y = Y[i]
-    sum_x = sum_x + x
-    sum_y = sum_y + y
-    sum_xx = sum_xx + x * x
-    sum_xy = sum_xy + x * y
-  end
-  local d = n * sum_xx - sum_x * sum_x
-  return (n * sum_xy - sum_x * sum_y) / d, (sum_y * sum_xx - sum_x * sum_xy) / d
-end
 
-local function linest_yb(Y, b)
-  local sum_x = 0
-  local sum_xx = 0
-  local sum_xy = 0
-  for x = 1, #Y do
-    local y = Y[x]
-    sum_x = sum_x + x
-    sum_xx = sum_xx + x * x
-    sum_xy = sum_xy + x * y
+  if X == nil or empty(X) then
+    for x = 1, #Y do
+      local y = Y[x]
+      sum_x = sum_x + x
+      sum_xx = sum_xx + x * x
+      sum_xy = sum_xy + x * y
+    end
+  else
+    for i = 1, #Y do
+      local x = X[i]
+      local y = Y[i]
+      sum_x = sum_x + x
+      sum_xx = sum_xx + x * x
+      sum_xy = sum_xy + x * y
+    end
   end
-  return (sum_xy - b * sum_x) / sum_xx, b
-end
 
-local function linest_yxb(Y, X, b)
-  local sum_x = 0
-  local sum_xx = 0
-  local sum_xy = 0
-  for i = 1, #Y do
-    local x = X[i]
-    local y = Y[i]
-    sum_x = sum_x + x
-    sum_xx = sum_xx + x * x
-    sum_xy = sum_xy + x * y
-  end
   return (sum_xy - b * sum_x) / sum_xx, b
 end
 
 return function (Y, X, b)
   if b == nil then
-    if X == nil or empty(X) then
-      return linest_y(Y)
-    else
-      return linest_yx(Y, X)
-    end
+    return linest1(Y, X)
   else
-    if X == nil or empty(X) then
-      return linest_yb(Y, b)
-    else
-      return linest_yxb(Y, X, b)
-    end
+    return linest1k(Y, X, b)
   end
 end
