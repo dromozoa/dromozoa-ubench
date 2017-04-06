@@ -1,4 +1,4 @@
--- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2015,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -15,39 +15,42 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local function average(V, i, j)
-  local n = j - i + 1
+local translate_range = require "dromozoa.commons.translate_range"
+
+local function average(data, i, j)
   local u = 0
-  while i <= j do
-    local v = V[i]
-    u = u + v
-    i = i + 1
+  for i = i, j do
+    u = u + data[i]
   end
-  return u / n
+  return u / (j - i + 1)
 end
 
-local function stdev(V, i, j, n)
-  local a = average(V, i, j)
+local function stdev(data, i, j, n)
+  local a = average(data, i, j)
   local u = 0
-  while i <= j do
-    local v = V[i] - a
+  for i = i, j do
+    local v = data[i] - a
     u = u + v * v
-    i = i + 1
   end
   return (u / n) ^ 0.5, a
 end
 
-return {
-  -- population
-  p = function (V, i, j)
-    if not i then i = 1 end
-    if not j then j = #V end
-    return stdev(V, i, j, j - i + 1)
+local class = {}
+
+-- sample
+function class.s(data, i, j)
+  local min, max = translate_range(#data, i, j)
+  return stdev(data, min, max, max - min)
+end
+
+-- population
+function class.p(data, i, j)
+  local min, max = translate_range(#data, i, j)
+  return stdev(data, min, max, max - min + 1)
+end
+
+return setmetatable(class, {
+  __call = function (_, data, i, j)
+    return class.s(data, i, j)
   end;
-  -- sample
-  s = function (V, i, j)
-    if not i then i = 1 end
-    if not j then j = #V end
-    return stdev(V, i, j, j - i)
-  end;
-}
+})
