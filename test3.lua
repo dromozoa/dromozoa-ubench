@@ -34,7 +34,7 @@ local function tarai(x, y, z)
   end
 end
 
-local context = ubench.prologue("rpi3")
+local context = ubench.prologue()
 
 local b = ubench()
 -- b:add("fib2", function (_, n) fibonacci(n) end, nil, 2)
