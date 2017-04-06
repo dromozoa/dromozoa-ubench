@@ -104,6 +104,8 @@ if options.scheduler then
 end
 
 if options.affinity then
+  local hardware_concurrency = unix.hardware_concurrency()
+  print(hardware_concurrency)
   local affinity = unix.sched_getaffinity(pid)
   print(json.encode(affinity))
   assert(unix.sched_setaffinity(pid, { 3 }))
@@ -126,15 +128,12 @@ if options.mlockall then
   assert(unix.munlockall())
 end
 
-table.sort(data)
+-- table.sort(data)
 local data_in = data
 local data = sequence()
-local X = math.floor(N / 5)
--- local X = 1
+-- local X = math.floor(N / 5)
+local X = 1
 for i = X, N - X do
-  if options.yield then
-    unix.sched_yield()
-  end
   data:push(data_in[i])
 end
 
