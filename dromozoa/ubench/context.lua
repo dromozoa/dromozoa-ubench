@@ -15,8 +15,12 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
+local read_file = require "dromozoa.commons.read_file"
 local uint32 = require "dromozoa.commons.uint32"
+local write_file = require "dromozoa.commons.write_file"
 local unix = require "dromozoa.unix"
+
+local scaling_governor_filename = "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor"
 
 local class = {}
 
@@ -26,6 +30,16 @@ end
 
 function class:initialize()
   local pid = assert(unix.getpid())
+
+  local scaling_governor = read_file(scaling_governor_filename)
+  if scaling_governor ~= nil and scaling_governor ~= "performance" then
+    local result, message = write_file(scaling_governor_filename, "performance")
+    if result then
+      self.scaling_governor = scaling_governor
+    else
+      io.stderr:write("could not write_file: ", message, "\n")
+    end
+  end
 
   if unix.sched_setaffinity then
     local affinity = assert(unix.sched_getaffinity(pid))
@@ -65,6 +79,11 @@ end
 
 function class:terminate()
   local pid = assert(unix.getpid())
+
+  if self.scaling_governor then
+    assert(write_file(scaling_governor_filename, self.scaling_governor))
+    self.scaling_governor = nil
+  end
 
   if self.affinity then
     assert(unix.sched_setaffinity(pid, self.affinity))
