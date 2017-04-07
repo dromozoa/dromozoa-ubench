@@ -18,9 +18,9 @@
 local linked_hash_table = require "dromozoa.commons.linked_hash_table"
 local pack = require "dromozoa.commons.pack"
 local sequence = require "dromozoa.commons.sequence"
-local uint32 = require "dromozoa.commons.uint32"
 local unpack = require "dromozoa.commons.unpack"
 local unix = require "dromozoa.unix"
+local context = require "dromozoa.ubench.context"
 local stdev = require "dromozoa.ubench.stdev"
 
 local function run(n, f, context, ...)
@@ -60,60 +60,8 @@ end
 
 local class = {}
 
-function class.prologue()
-  local context = {}
-  local pid = assert(unix.getpid())
-
-  if unix.sched_setaffinity then
-    local affinity = assert(unix.sched_getaffinity(pid))
-    local result, message = unix.sched_setaffinity(pid, { 3 })
-    if result then
-      context.affinity = affinity
-    else
-      io.stderr:write("coult not sched_setaffinity: ", message, "\n")
-    end
-  end
-
-  if unix.sched_setscheduler then
-    local scheduler = assert(unix.sched_getscheduler(pid))
-    local param = assert(unix.sched_getparam(pid))
-    local result, message = unix.sched_setscheduler(pid, unix.SCHED_FIFO, {
-      sched_priority = assert(unix.sched_get_priority_max(unix.SCHED_FIFO)) - 1;
-    })
-    if result then
-      context.scheduler = scheduler
-      context.param = param
-    else
-      io.stderr:write("coult not sched_setscheduler: ", message, "\n")
-    end
-  end
-
-  if unix.mlockall then
-    local result, message = unix.mlockall(uint32.bor(unix.MCL_CURRENT, unix.MCL_FUTURE))
-    if result then
-      context.mlockall = true
-    else
-      io.stderr:write("coult not mlockall: ", message, "\n")
-    end
-  end
-
-  return context
-end
-
-function class.epilogue(context)
-  local pid = assert(unix.getpid())
-
-  if context.affinity then
-    assert(unix.sched_setaffinity(pid, context.affinity))
-  end
-
-  if context.scheduler then
-    assert(unix.sched_setscheduler(pid, context.scheduler, context.param))
-  end
-
-  if context.mlockall then
-    assert(unix.munlockall())
-  end
+function class.initialize()
+  return context():initialize()
 end
 
 function class.new()
