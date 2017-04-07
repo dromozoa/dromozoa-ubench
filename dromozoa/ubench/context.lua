@@ -97,7 +97,7 @@ function class:terminate()
   end
 
   if self.mlockall then
-    assert(self.munlockall())
+    assert(unix.munlockall())
     self.mlockall = nil
   end
 
