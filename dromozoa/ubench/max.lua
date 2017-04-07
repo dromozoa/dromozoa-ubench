@@ -1,4 +1,4 @@
--- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2015,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -15,15 +15,16 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-return function (V, i, j)
-  if not i then i = 1 end
-  if not j then j = #V end
-  local max = V[i]
-  for i = i + 1, j do
-    local v = V[i]
-    if max < v then
-      max = v
+local translate_range = require "dromozoa.commons.translate_range"
+
+return function (data, i, j)
+  local min, max = translate_range(#data, i, j)
+  local u = data[min]
+  for i = min + 1, max do
+    local v = data[i]
+    if u < v then
+      u = v
     end
   end
-  return max
+  return u
 end

@@ -1,4 +1,4 @@
--- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2015,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -37,6 +37,10 @@ local a, b = linest(Y, {})
 assert_number(a, 1.006)
 assert_number(b, -1.014)
 
+local a, b = linest(Y)
+assert_number(a, 1.006)
+assert_number(b, -1.014)
+
 local a, b = linest(Y, X, 0)
 assert_number(a, 0.50166667)
 assert_number(b, 0)
@@ -45,15 +49,23 @@ local a, b = linest(Y, {}, 0)
 assert_number(a, 0.72945455)
 assert_number(b, 0)
 
+local a, b = linest(Y, nil, 0)
+assert_number(a, 0.72945455)
+assert_number(b, 0)
+
 local V = { 0.85, 0.9, 1, 1.1, 1.15 }
 
 assert_number(max(V), 1.15)
 assert_number(min(V), 0.85)
 
-local s, a = stdev.p(V)
-assert_number(s, 0.11401754)
+local s, a = stdev(V)
+assert_number(s, 0.12747579)
 assert_number(a, 1)
 
 local s, a = stdev.s(V)
 assert_number(s, 0.12747579)
+assert_number(a, 1)
+
+local s, a = stdev.p(V)
+assert_number(s, 0.11401754)
 assert_number(a, 1)

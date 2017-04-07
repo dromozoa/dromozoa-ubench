@@ -18,38 +18,10 @@
 local linked_hash_table = require "dromozoa.commons.linked_hash_table"
 local pack = require "dromozoa.commons.pack"
 local sequence = require "dromozoa.commons.sequence"
-local translate_range = require "dromozoa.commons.translate_range"
-local uint32 = require "dromozoa.commons.uint32"
 local unpack = require "dromozoa.commons.unpack"
 local unix = require "dromozoa.unix"
-
-local function average(data, i, j)
-  local u = 0
-  for i = i, j do
-    u = u + data[i]
-  end
-  return u / (j - i + 1)
-end
-
-local function stdev(data, i, j, n)
-  local a = average(data, i, j)
-  local u = 0
-  for i = i, j do
-    local v = data[i] - a
-    u = u + v * v
-  end
-  return (u / n) ^ 0.5, a
-end
-
-local function stdev_s(data, i, j)
-  local min, max = translate_range(#data, i, j)
-  return stdev(data, min, max, max - min)
-end
-
-local function stdev_p(data, i, j)
-  local min, max = translate_range(#data, i, j)
-  return stdev(data, min, max, max - min + 1)
-end
+local context = require "dromozoa.ubench.context"
+local stdev = require "dromozoa.ubench.stdev"
 
 local function run(n, f, context, ...)
   local timer = unix.timer()
@@ -88,32 +60,8 @@ end
 
 local class = {}
 
-function class.prologue(profile)
-  if profile ~= "rpi3" then
-    return
-  end
-  local pid = assert(unix.getpid())
-  local context = {
-    affinity = assert(unix.sched_getaffinity(pid));
-    scheduler = assert(unix.sched_getscheduler(pid));
-    param = assert(unix.sched_getparam(pid));
-  }
-  assert(unix.sched_setaffinity(pid, { 3 }))
-  assert(unix.sched_setscheduler(pid, unix.SCHED_FIFO, {
-    sched_priority = assert(unix.sched_get_priority_max(unix.SCHED_FIFO)) - 1;
-  }))
-  assert(unix.mlockall(uint32.bor(unix.MCL_CURRENT, unix.MCL_FUTURE)))
-  return context
-end
-
-function class.epilogue(context)
-  if context == nil then
-    return
-  end
-  local pid = assert(unix.getpid())
-  assert(unix.sched_setaffinity(pid, context.affinity))
-  assert(unix.sched_setscheduler(pid, context.scheduler, context.param))
-  assert(unix.munlockall())
+function class.initialize()
+  return context():initialize()
 end
 
 function class.new()
@@ -143,12 +91,11 @@ function class:run()
       result:push(run(n, unpack(v, 1, v.n)) / n)
     end
     result:sort()
-    local s, a = stdev_s(result, M1, M2)
+    local s, a = stdev(result, M1, M2)
     results:push({ k, s, a })
   end
   return results
 end
-
 
 class.metatable = {
   __index = class;
