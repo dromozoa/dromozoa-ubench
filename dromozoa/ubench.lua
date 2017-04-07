@@ -21,7 +21,7 @@ local sequence = require "dromozoa.commons.sequence"
 local unpack = require "dromozoa.commons.unpack"
 local unix = require "dromozoa.unix"
 local context = require "dromozoa.ubench.context"
-local stdev = require "dromozoa.ubench.stdev"
+local report = require "dromozoa.ubench.report"
 
 local function run(n, f, context, ...)
   local timer = unix.timer()
@@ -64,12 +64,14 @@ function class.initialize()
   return context():initialize()
 end
 
+function class.report(results)
+  report(results)
+end
+
 function class.new()
   return {
     T = 0.001;
     N = 1000;
-    M1 = 101;
-    M2 = 900;
     benchmarks = linked_hash_table();
   }
 end
@@ -81,18 +83,22 @@ end
 function class:run()
   local T = self.T
   local N = self.N
-  local M1 = self.M1
-  local M2 = self.M2
-  local results = sequence()
-  for k, v in self.benchmarks:each() do
-    local n = estimate(T, unpack(v, 1, v.n))
-    local result = sequence()
-    for i = 1, N do
-      result:push(run(n, unpack(v, 1, v.n)) / n)
+  local benchmarks = self.benchmarks
+  local results = linked_hash_table();
+  for key, benchmark in self.benchmarks:each() do
+    results[key] = {
+      iteration = estimate(T, unpack(benchmark, 1, benchmark.n));
+      data = sequence();
+    }
+  end
+  for i = 1, N do
+    io.stderr:write(i, "/", N, "\n")
+    assert(unix.reserve_stack_pages(8192))
+    for key, benchmark in self.benchmarks:each() do
+      local result = results[key]
+      result.data:push(run(result.iteration, unpack(benchmark, 1, benchmark.n)))
     end
-    result:sort()
-    local s, a = stdev(result, M1, M2)
-    results:push({ k, s, a })
+    assert(unix.sched_yield())
   end
   return results
 end

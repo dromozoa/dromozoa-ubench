@@ -34,19 +34,18 @@ local function tarai(x, y, z)
   end
 end
 
-local context = ubench.initialize()
-
 local b = ubench()
--- b:add("fib2", function (_, n) fibonacci(n) end, nil, 2)
--- b:add("fib3", function (_, n) fibonacci(n) end, nil, 3)
--- b:add("fib4", function (_, n) fibonacci(n) end, nil, 4)
--- b:add("fib5", function (_, n) fibonacci(n) end, nil, 5)
--- b:add("fib6", function (_, n) fibonacci(n) end, nil, 6)
--- b:add("fib7", function (_, n) fibonacci(n) end, nil, 7)
--- b:add("fib8", function (_, n) fibonacci(n) end, nil, 8)
+b:add("fib2", function (_, n) fibonacci(n) end, nil, 2)
+b:add("fib3", function (_, n) fibonacci(n) end, nil, 3)
+b:add("fib4", function (_, n) fibonacci(n) end, nil, 4)
+b:add("fib5", function (_, n) fibonacci(n) end, nil, 5)
+b:add("fib6", function (_, n) fibonacci(n) end, nil, 6)
+b:add("fib7", function (_, n) fibonacci(n) end, nil, 7)
+b:add("fib8", function (_, n) fibonacci(n) end, nil, 8)
 b:add("fib9", function (_, n) fibonacci(n) end, nil, 9)
-local r = b:run()
 
+local context = ubench.initialize()
+local r = b:run()
 context:terminate()
 
-print(json.encode(r, { pretty = true }))
+io.write(json.encode(r), "\n")
