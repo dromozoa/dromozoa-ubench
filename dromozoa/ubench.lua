@@ -92,7 +92,7 @@ function class:run()
     }
   end
   for i = 1, N do
-    io.stderr:write(i, "/", N, "\n")
+    io.stderr:write("\r", i, "/", N)
     assert(unix.reserve_stack_pages(8192))
     for key, benchmark in self.benchmarks:each() do
       local result = results[key]
@@ -100,6 +100,7 @@ function class:run()
     end
     assert(unix.sched_yield())
   end
+  io.stderr:write("\n")
   return results
 end
 

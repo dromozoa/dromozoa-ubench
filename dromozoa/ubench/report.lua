@@ -21,7 +21,11 @@ local max = require "dromozoa.ubench.max"
 local min = require "dromozoa.ubench.min"
 local stdev = require "dromozoa.ubench.stdev"
 
-return function (results)
+return function (results, dir)
+  if dir == nil then
+    dir = "."
+  end
+
   local i = 1
   for key, result in pairs(results) do
     local iteration = result.iteration
