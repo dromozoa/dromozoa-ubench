@@ -52,6 +52,7 @@ local function estimate(t, f, context, ...)
     if m < 1 then
       m = 1
     end
+    local m = m - m % 1
     if n == m then
       return n
     end

@@ -53,7 +53,7 @@ return function (results, dir)
     out:close()
 
     local n = #sample
-    local m = n * 0.2
+    local m = n * 0.25
     m = m - m % 1
 
     local data = {

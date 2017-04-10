@@ -28,5 +28,4 @@ b.benchmarks = assert(loadfile(arg[1]))()
 local context = ubench.initialize()
 local results = b:run()
 context:terminate()
-
 io.write(json.encode(results, { pretty = true }), "\n")
