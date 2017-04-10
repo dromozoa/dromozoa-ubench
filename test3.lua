@@ -15,9 +15,6 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local json = require "dromozoa.commons.json"
-local ubench = require "dromozoa.ubench"
-
 local function fibonacci(n)
   if n < 2 then
     return n
@@ -34,18 +31,13 @@ local function tarai(x, y, z)
   end
 end
 
-local b = ubench()
-b:add("fib2", function (_, n) fibonacci(n) end, nil, 2)
-b:add("fib3", function (_, n) fibonacci(n) end, nil, 3)
-b:add("fib4", function (_, n) fibonacci(n) end, nil, 4)
-b:add("fib5", function (_, n) fibonacci(n) end, nil, 5)
-b:add("fib6", function (_, n) fibonacci(n) end, nil, 6)
-b:add("fib7", function (_, n) fibonacci(n) end, nil, 7)
-b:add("fib8", function (_, n) fibonacci(n) end, nil, 8)
-b:add("fib9", function (_, n) fibonacci(n) end, nil, 9)
-
-local context = ubench.initialize()
-local r = b:run()
-context:terminate()
-
-io.write(json.encode(r), "\n")
+return {
+  fib4 = { function (_, n) fibonacci(n) end, nil, 4 };
+  fib5 = { function (_, n) fibonacci(n) end, nil, 5 };
+  fib6 = { function (_, n) fibonacci(n) end, nil, 6 };
+  fib7 = { function (_, n) fibonacci(n) end, nil, 7 };
+  tarai4 = { function (_, n) tarai(n * 2, n, n) end, nil, 4 };
+  tarai5 = { function (_, n) tarai(n * 2, n, n) end, nil, 5 };
+  tarai6 = { function (_, n) tarai(n * 2, n, n) end, nil, 6 };
+  tarai7 = { function (_, n) tarai(n * 2, n, n) end, nil, 7 };
+}

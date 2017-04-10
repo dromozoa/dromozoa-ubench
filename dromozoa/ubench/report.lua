@@ -26,39 +26,51 @@ return function (results, dir)
     dir = "."
   end
 
+  local dataset = sequence()
+
   local i = 1
   for key, result in pairs(results) do
     local iteration = result.iteration
-    local data = sequence()
+    local sample = sequence()
     for v in result.data:each() do
-      data:push(v * 1000000 / iteration)
+      sample:push(v * 1000000 / iteration)
     end
 
-    local out = assert(io.open(("ubench-data-%04d.txt"):format(i), "w"))
-    out:write("#ubench-data-", key, "\n")
-    for v in data:each() do
+    local out = assert(io.open(("%s/sample-%04d.txt"):format(dir, i), "w"))
+    out:write("#sample-", key, "\n")
+    for v in sample:each() do
       out:write(v, "\n")
     end
     out:close()
 
-    data:sort()
+    sample:sort()
 
-    local out = assert(io.open(("ubench-sort-%04d.txt"):format(i), "w"))
-    out:write("#ubench-sort-", key, "\n")
-    for v in data:each() do
+    local out = assert(io.open(("%s/sorted-%04d.txt"):format(dir, i), "w"))
+    out:write("#sorted-", key, "\n")
+    for v in sample:each() do
       out:write(v, "\n")
     end
     out:close()
 
-    local n = #data
+    local n = #sample
     local m = n * 0.2
     m = m - m % 1
 
-    local min = min(data, m + 1, n - m)
-    local max = max(data, m + 1, n - m)
-    local sd, avg = stdev(data, m + 1, n - m)
-    io.write(key, "\t", min, "\t", max, "\t", avg, "\t", sd, "\n")
+    local data = {
+      key = key;
+      min = min(sample, m + 1, n - m);
+      max = max(sample, m + 1, n - m);
+    }
+    data.sd, data.avg = stdev(sample, m + 1, n - m)
+    dataset:push(data)
 
     i = i + 1
   end
+
+  local out = assert(io.open(("%s/report.txt"):format(dir), "w"))
+  out:write("key\tavg\tmin\tmax\tcv\tsd\n")
+  for data in dataset:each() do
+    out:write(("%s\t%.17g\t%.17g\t%.17g\t%.17g\t%.17g\n"):format(data.key, data.avg, data.min, data.max, data.sd / data.avg, data.sd))
+  end
+  out:close()
 end
