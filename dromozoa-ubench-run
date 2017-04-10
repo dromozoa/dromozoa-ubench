@@ -1,6 +1,6 @@
 #! /usr/bin/env lua
 
--- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2015,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -17,22 +17,16 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local run = require "dromozoa.ubench.run"
+local json = require "dromozoa.commons.json"
+local ubench = require "dromozoa.ubench"
 
 local format = string.format
 
-local B = assert(loadfile(arg[1]))()
+local b = ubench()
+b.benchmarks = assert(loadfile(arg[1]))()
 
-local F = {}
-for i = 1, #B do
-  F[i] = B[i][2]
-end
+local context = ubench.initialize()
+local results = b:run()
+context:terminate()
 
-local R = run(F, 500, 1000)
-
-io.write("return {\n")
-for i = 1, #R do
-  local v = R[i]
-  io.write(format("{ %.17g, %.17g };\n", v[1], v[2]))
-end
-io.write("}\n")
+io.write(json.encode(results, { pretty = true }), "\n")

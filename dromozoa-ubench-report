@@ -1,4 +1,6 @@
--- Copyright (C) 2015,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+#! /usr/bin/env lua
+
+-- Copyright (C) 2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -15,16 +17,23 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local translate_range = require "dromozoa.commons.translate_range"
+local read_file = require "dromozoa.commons.read_file"
+local uint32 = require "dromozoa.commons.uint32"
+local json = require "dromozoa.commons.json"
+local unix = require "dromozoa.unix"
+local ubench = require "dromozoa.ubench"
 
-return function (data, i, j)
-  local min, max = translate_range(#data, i, j)
-  local u = data[min]
-  for i = min + 1, max do
-    local v = data[i]
-    if u > v then
-      u = v
+local filename = ...
+
+local dir = assert(filename:match("^(.+)%.json$"))
+local result, message, code = unix.mkdir(dir)
+if not result then
+  if code == unix.EEXIST then
+    if uint32.band(unix.stat(dir).st_mode, unix.S_IFMT) ~= unix.S_IFDIR then
+      error(unix.strerror(unix.ENOTDIR))
     end
+  else
+    error(message)
   end
-  return u
 end
+ubench.report(json.decode(assert(read_file(filename))), dir)
