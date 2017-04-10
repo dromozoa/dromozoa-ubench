@@ -16,6 +16,7 @@
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
 local linked_hash_table = require "dromozoa.commons.linked_hash_table"
+local pairs = require "dromozoa.commons.pairs"
 local pack = require "dromozoa.commons.pack"
 local sequence = require "dromozoa.commons.sequence"
 local unpack = require "dromozoa.commons.unpack"
@@ -85,7 +86,7 @@ function class:run()
   local N = self.N
   local benchmarks = self.benchmarks
   local results = linked_hash_table();
-  for key, benchmark in self.benchmarks:each() do
+  for key, benchmark in pairs(benchmarks) do
     results[key] = {
       iteration = estimate(T, unpack(benchmark, 1, benchmark.n));
       data = sequence();
@@ -94,7 +95,7 @@ function class:run()
   for i = 1, N do
     io.stderr:write("\r", i, "/", N)
     assert(unix.reserve_stack_pages(8192))
-    for key, benchmark in self.benchmarks:each() do
+    for key, benchmark in pairs(benchmarks) do
       local result = results[key]
       result.data:push(run(result.iteration, unpack(benchmark, 1, benchmark.n)))
     end
