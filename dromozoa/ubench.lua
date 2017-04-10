@@ -64,8 +64,8 @@ function class.initialize()
   return context():initialize()
 end
 
-function class.report(results)
-  report(results)
+function class.report(results, dir)
+  report(results, dir)
 end
 
 function class.new()
