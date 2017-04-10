@@ -1,6 +1,6 @@
 #! /usr/bin/env lua
 
--- Copyright (C) 2015,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -18,12 +18,34 @@
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
 local json = require "dromozoa.commons.json"
+local read_file = require "dromozoa.commons.read_file"
 local ubench = require "dromozoa.ubench"
 
-local format = string.format
+local filename, T, N = ...
+local text = assert(read_file(filename))
 
 local b = ubench()
-b.benchmarks = assert(loadfile(arg[1]))()
+T = tonumber(T)
+N = tonumber(N)
+if T ~= nil then
+  b.T = T
+end
+if N ~= nil then
+  b.N = N
+end
+
+b:add("byte1", function (ctx, text)
+  local n = #text
+  for i = 1, n do
+    local a = text:byte(i)
+    local v = ctx[a]
+    if v then
+      ctx[a] = v + 1
+    else
+      ctx[a] = 1
+    end
+  end
+end, {}, text)
 
 local context = ubench.initialize()
 local results = b:run()
