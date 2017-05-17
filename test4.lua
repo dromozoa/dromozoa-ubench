@@ -15,10 +15,6 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local X = 16
-local Y = 16
-local Z = 16
-
 local function create1_arithmetic()
   local t = {}
   for x = 1, 113, 7 do
