@@ -23,17 +23,18 @@ local json = require "dromozoa.commons.json"
 local unix = require "dromozoa.unix"
 local ubench = require "dromozoa.ubench"
 
-local filename = ...
-
-local dir = assert(filename:match("^(.+)%.json$"))
-local result, message, code = unix.mkdir(dir)
-if not result then
-  if code == unix.EEXIST then
-    if uint32.band(unix.stat(dir).st_mode, unix.S_IFMT) ~= unix.S_IFDIR then
-      error(unix.strerror(unix.ENOTDIR))
+for i = 1, #arg do
+  local filename = arg[i]
+  local dir = assert(filename:match("^(.+)%.json$"))
+  local result, message, code = unix.mkdir(dir)
+  if not result then
+    if code == unix.EEXIST then
+      if uint32.band(unix.stat(dir).st_mode, unix.S_IFMT) ~= unix.S_IFDIR then
+        error(unix.strerror(unix.ENOTDIR))
+      end
+    else
+      error(message)
     end
-  else
-    error(message)
   end
+  ubench.report(json.decode(assert(read_file(filename))), dir)
 end
-ubench.report(json.decode(assert(read_file(filename))), dir)
