@@ -73,4 +73,6 @@ return function (results, dir)
     out:write(("%s\t%.17g\t%.17g\t%.17g\t%.17g\t%.17g\n"):format(data.key, data.avg, data.min, data.max, data.sd / data.avg, data.sd))
   end
   out:close()
+
+  return dataset
 end
