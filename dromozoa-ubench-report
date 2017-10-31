@@ -36,5 +36,21 @@ for i = 1, #arg do
       error(message)
     end
   end
-  ubench.report(json.decode(assert(read_file(filename))), dir)
+  local dataset = ubench.report(json.decode(assert(read_file(filename))), dir)
+
+  dataset:sort(function (a, b)
+    return a.key < b.key
+  end)
+
+  local max = 0
+  for data in dataset:each() do
+    local n = #data.key
+    if max < n then
+      max = n
+    end
+  end
+  local f = "%" .. max .. "s %9d\n"
+  for data in dataset:each() do
+    io.write(f:format(data.key, math.floor(data.avg + 0.5)))
+  end
 end
