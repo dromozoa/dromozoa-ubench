@@ -67,7 +67,7 @@ function class.initialize()
 end
 
 function class.report(results, dir)
-  report(results, dir)
+  return report(results, dir)
 end
 
 function class.new()
