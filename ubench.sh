@@ -51,19 +51,19 @@ result_name="ubench_result-$result_name"
 
 for i in "$@"
 do
-  result=`"$i" -v 2>&1`
+  result=`$i -v 2>&1`
   case x$result in
     xLuaJIT*) program_name=luajit;;
     *) program_name=lua`expr "x$result" : 'x.* \([0-9][0-9]*\.[0-9][0-9]*\)'`;;
   esac
   name="$result_name-$program_name"
 
-  "$i" "$here/dromozoa-ubench-run" "$script" >"$name.json"
+  $i "$here/dromozoa-ubench-run" "$script" >"$name.json"
 done
 
 for i in "$@"
 do
-  result=`"$i" -v 2>&1`
+  result=`$i -v 2>&1`
   case x$result in
     xLuaJIT*) program_name=luajit;;
     *) program_name=lua`expr "x$result" : 'x.* \([0-9][0-9]*\.[0-9][0-9]*\)'`;;
@@ -73,5 +73,5 @@ do
   echo ========================================
   echo "$name"
   echo ========================================
-  "$i" "$here/dromozoa-ubench-report" "$name.json"
+  $i "$here/dromozoa-ubench-report" "$name.json"
 done
