@@ -45,13 +45,9 @@ script=$1
 shift
 
 result_name=`fn_basename "$script"`
-echo "[$result_name]"
 result_name=`expr "x$result_name" : 'xubench_\(.*\)' '|' "$result_name"`
-echo "[$result_name]"
 result_name=`expr "x$result_name" : 'x\(.*\)\.' '|' "$result_name"`
-echo "[$result_name]"
 result_name="ubench_result-$result_name"
-echo "[$result_name]"
 
 for i in "$@"
 do
