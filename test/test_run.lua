@@ -52,6 +52,12 @@ local results = ubench.run(T, N, benchmarks)
 context:terminate()
 
 assert(#results == #benchmarks)
+if verbose then
+  io.stderr:write [[
+Name          | Iter | Average | Minimum | Maximum
+--------------|------|---------|---------|--------
+]]
+end
 for i = 1, #results do
   local result = results[i]
   assert(result.name == benchmarks[i][1])
