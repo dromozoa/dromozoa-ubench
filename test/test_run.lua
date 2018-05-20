@@ -73,3 +73,7 @@ for i = 1, #results do
     io.stderr:write(("%-13s | %9d | %7.3f | %7.3f | %7.3f\n"):format(result.name, result.iteration, avg * x, min * x, max * x))
   end
 end
+
+local out = io.open("/dev/null", "w")
+ubench.dump(out, results)
+out:close()

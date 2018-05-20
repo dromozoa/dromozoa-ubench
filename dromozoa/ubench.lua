@@ -17,6 +17,7 @@
 
 return {
   context = require "dromozoa.ubench.context";
+  dump = require "dromozoa.ubench.dump";
   linest = require "dromozoa.ubench.linest";
   max = require "dromozoa.ubench.max";
   min = require "dromozoa.ubench.min";
