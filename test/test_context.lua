@@ -15,13 +15,13 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local context = require "dromozoa.ubench.context"
+local ubench = require "dromozoa.ubench"
 
 local verbose = os.getenv "VERBOSE" == "1"
 
-local function dump(ctx, key)
+local function dump(context, key)
   io.stderr:write((" %-15s | "):format(key))
-  local value = ctx[key]
+  local value = context[key]
   local t = type(value)
   if t == "nil" then
     io.stderr:write "nil"
@@ -39,19 +39,19 @@ local function dump(ctx, key)
   io.stderr:write "\n"
 end
 
-local ctx = context()
-ctx:initialize()
+local context = ubench.context()
+context:initialize()
 
 if verbose then
   io.stderr:write [[
  Name            | Value
 -----------------|-----------------
 ]]
-  dump(ctx, "scaling_govener")
-  dump(ctx, "affinity")
-  dump(ctx, "scheduler")
-  dump(ctx, "param")
-  dump(ctx, "mlockall")
+  dump(context, "scaling_govener")
+  dump(context, "affinity")
+  dump(context, "scheduler")
+  dump(context, "param")
+  dump(context, "mlockall")
 end
 
-ctx:terminate()
+context:terminate()

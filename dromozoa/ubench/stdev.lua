@@ -1,4 +1,4 @@
--- Copyright (C) 2015,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2015,2017,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -14,8 +14,6 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
-
-local translate_range = require "dromozoa.commons.translate_range"
 
 local function average(data, i, j)
   local u = 0
@@ -39,18 +37,16 @@ local class = {}
 
 -- sample
 function class.s(data, i, j)
-  local min, max = translate_range(#data, i, j)
-  return stdev(data, min, max, max - min)
+  return stdev(data, i, j, j - i)
 end
 
 -- population
 function class.p(data, i, j)
-  local min, max = translate_range(#data, i, j)
-  return stdev(data, min, max, max - min + 1)
+  return stdev(data, i, j, j - i + 1)
 end
 
 return setmetatable(class, {
   __call = function (_, data, i, j)
-    return class.s(data, i, j)
+    return stdev(data, i, j, j - i)
   end;
 })
