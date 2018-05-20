@@ -63,5 +63,3 @@ for i = 1, #results do
     io.stderr:write(("%s | %7.3f | %7.3f | %7.3f\n"):format(result.name, avg * x, min * x, max * x))
   end
 end
-
-
