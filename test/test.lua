@@ -35,6 +35,35 @@ local function tarai(x, y, z)
   end
 end
 
+local epsilon = 0.000001
+
+local function equal(a, b)
+  if a == b then
+    return true
+  else
+    local ta = type(a)
+    local tb = type(b)
+    if ta == "number" and tb == "number" then
+      return a - epsilon < b and b < a + epsilon
+    elseif ta == "table" and tb == "table" then
+      for k, u in pairs(a) do
+        local v = b[k]
+        if v == nil or not equal(u, v) then
+          return false
+        end
+      end
+      for k in pairs(b) do
+        if a[k] == nil then
+          return false
+        end
+      end
+      return true
+    else
+      return false
+    end
+  end
+end
+
 local T = 0.001
 local N = 1000
 
@@ -74,6 +103,9 @@ for i = 1, #results do
   end
 end
 
-local out = io.open("/dev/null", "w")
+local out = io.open("test.dat", "w")
 ubench.dump(out, results)
 out:close()
+
+local results2 = assert(assert(loadfile "test.dat")())
+assert(equal(results, results2))
