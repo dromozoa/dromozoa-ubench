@@ -20,7 +20,7 @@ local ubench = require "dromozoa.ubench"
 local verbose = os.getenv "VERBOSE" == "1"
 
 local function dump(context, key)
-  io.stderr:write((" %-15s | "):format(key))
+  io.stderr:write((" %-16s | "):format(key))
   local value = context[key]
   local t = type(value)
   if t == "nil" then
