@@ -103,7 +103,7 @@ for i = 1, #results do
   end
 end
 
-local out = io.open("test.dat", "w")
+local out = assert(io.open("test.dat", "w"))
 ubench.dump(out, results)
 out:close()
 
