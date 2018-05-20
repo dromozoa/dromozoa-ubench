@@ -21,22 +21,20 @@ local min = require "dromozoa.ubench.min"
 local stdev = require "dromozoa.ubench.stdev"
 
 return function (results, dir)
-  if dir then
-    local result, message, code = unix.mkdir(dir)
-    if not result then
-      if code == unix.EEXIST then
-        if unix.band(unix.stat(dir).st_mode, unix.S_IFMT) ~= unix.S_IFDIR then
-          error(unix.strerror(unix.ENOTDIR))
-        end
-      else
-        error(message)
+  local result, message, code = unix.mkdir(dir)
+  if not result then
+    if code == unix.EEXIST then
+      if unix.band(unix.stat(dir).st_mode, unix.S_IFMT) ~= unix.S_IFDIR then
+        error(unix.strerror(unix.ENOTDIR))
       end
+    else
+      error(message)
     end
-  else
-    dir = "."
   end
 
   local dataset = {}
+
+  local version = results.version
   for i = 1, #results do
     local result = results[i]
     local iteration = result.iteration
@@ -57,6 +55,7 @@ return function (results, dir)
     m = m + 1
 
     local data = {
+      version = version;
       name = result.name;
       min = min(samples, m, n);
       max = max(samples, m, n);
@@ -70,7 +69,7 @@ return function (results, dir)
   out:write "key\tavg\tmin\tmax\tcv\tsd\n"
   for i = 1, #dataset do
     local data = dataset[i]
-    out:write(("%s\t%.17g\t%.17g\t%.17g\t%.17g\t%.17g\n"):format(data.name, data.avg, data.min, data.max, data.sd / data.avg, data.sd))
+    out:write(("%s\t%s\t%.17g\t%.17g\t%.17g\t%.17g\t%.17g\n"):format(data.version, data.name, data.avg, data.min, data.max, data.sd / data.avg, data.sd))
   end
   out:close()
 
