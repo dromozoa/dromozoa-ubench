@@ -58,6 +58,11 @@ end
 
 return function (T, N, benchmarks)
   local results = {}
+  if jit then
+    results.version = jit.version
+  else
+    results.version = _VERSION
+  end
   for i = 1, #benchmarks do
     -- { name, f, context, ... }
     local benchmark = benchmarks[i]
