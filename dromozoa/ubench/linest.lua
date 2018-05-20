@@ -1,4 +1,4 @@
--- Copyright (C) 2015,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2015,2017,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -15,8 +15,6 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local empty = require "dromozoa.commons.empty"
-
 local function linest1(Y, X)
   local sum_x = 0
   local sum_y = 0
@@ -24,7 +22,7 @@ local function linest1(Y, X)
   local sum_xy = 0
   local n = #Y
 
-  if X == nil or empty(X) then
+  if not X or next(X) == nil then
     for x = 1, n do
       local y = Y[x]
       sum_x = sum_x + x
@@ -52,7 +50,7 @@ local function linest1k(Y, X, b)
   local sum_xx = 0
   local sum_xy = 0
 
-  if X == nil or empty(X) then
+  if not X or next(X) == nil then
     for x = 1, #Y do
       local y = Y[x]
       sum_x = sum_x + x
