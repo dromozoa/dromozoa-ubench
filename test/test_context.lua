@@ -1,5 +1,3 @@
-#! /usr/bin/env lua
-
 -- Copyright (C) 2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
@@ -21,6 +19,39 @@ local context = require "dromozoa.ubench.context"
 
 local verbose = os.getenv "VERBOSE" == "1"
 
+local function dump(ctx, key)
+  io.stderr:write((" %-15s | "):format(key))
+  local value = ctx[key]
+  local t = type(value)
+  if t == "nil" then
+    io.stderr:write "nil"
+  elseif t == "boolean" then
+    if value then
+      io.stderr:write "true"
+    else
+      io.stderr:write "false"
+    end
+  elseif t == "table" then
+    io.stderr:write(table.concat(value, " "))
+  else
+    io.stderr:write(value)
+  end
+  io.stderr:write "\n"
+end
+
 local ctx = context()
 ctx:initialize()
+
+if verbose then
+  io.stderr:write [[
+ Name            | Value
+-----------------|-----------------
+]]
+  dump(ctx, "scaling_govener")
+  dump(ctx, "affinity")
+  dump(ctx, "scheduler")
+  dump(ctx, "param")
+  dump(ctx, "mlockall")
+end
+
 ctx:terminate()
