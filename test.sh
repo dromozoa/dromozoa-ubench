@@ -25,4 +25,4 @@ do
   esac
 done
 
-rm -f test.dat
+rm -fr test.dat test.dir

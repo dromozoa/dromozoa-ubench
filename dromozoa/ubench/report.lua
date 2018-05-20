@@ -1,4 +1,4 @@
--- Copyright (C) 2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2017,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -15,62 +15,62 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local pairs = require "dromozoa.commons.pairs"
-local sequence = require "dromozoa.commons.sequence"
+local unix = require "dromozoa.unix"
 local max = require "dromozoa.ubench.max"
 local min = require "dromozoa.ubench.min"
 local stdev = require "dromozoa.ubench.stdev"
 
 return function (results, dir)
-  if dir == nil then
+  if dir then
+    local result, message, code = unix.mkdir(dir)
+    if not result then
+      if code == unix.EEXIST then
+        if unix.band(unix.stat(dir).st_mode, unix.S_IFMT) ~= unix.S_IFDIR then
+          error(unix.strerror(unix.ENOTDIR))
+        end
+      else
+        error(message)
+      end
+    end
+  else
     dir = "."
   end
 
-  local dataset = sequence()
-
-  local i = 1
-  for key, result in pairs(results) do
+  local dataset = {}
+  for i = 1, #results do
+    local result = results[i]
     local iteration = result.iteration
-    local sample = sequence()
-    for v in result.data:each() do
-      sample:push(v * 1000000 / iteration)
+    local samples = {}
+    for j = 1, #result do
+      samples[j] = result[j] * 1000000 / iteration
     end
 
-    local out = assert(io.open(("%s/sample-%04d.txt"):format(dir, i), "w"))
-    out:write("#sample-", key, "\n")
-    for v in sample:each() do
-      out:write(v, "\n")
-    end
-    out:close()
+    -- write_png
+    table.sort(samples)
+    -- write_png
 
-    sample:sort()
-
-    local out = assert(io.open(("%s/sorted-%04d.txt"):format(dir, i), "w"))
-    out:write("#sorted-", key, "\n")
-    for v in sample:each() do
-      out:write(v, "\n")
-    end
-    out:close()
-
-    local n = #sample
+    local n = #samples
     local m = n * 0.25
     m = m - m % 1
 
-    local data = {
-      key = key;
-      min = min(sample, m + 1, n - m);
-      max = max(sample, m + 1, n - m);
-    }
-    data.sd, data.avg = stdev(sample, m + 1, n - m)
-    dataset:push(data)
+    n = n - m
+    m = m + 1
 
-    i = i + 1
+    local data = {
+      name = result.name;
+      min = min(samples, m, n);
+      max = max(samples, m, n);
+    }
+    data.sd, data.avg = stdev(samples, m, n)
+
+    dataset[i] = data
   end
 
   local out = assert(io.open(("%s/report.txt"):format(dir), "w"))
-  out:write("key\tavg\tmin\tmax\tcv\tsd\n")
-  for data in dataset:each() do
-    out:write(("%s\t%.17g\t%.17g\t%.17g\t%.17g\t%.17g\n"):format(data.key, data.avg, data.min, data.max, data.sd / data.avg, data.sd))
+  out:write "key\tavg\tmin\tmax\tcv\tsd\n"
+  for i = 1, #dataset do
+    local data = dataset[i]
+    out:write(("%s\t%.17g\t%.17g\t%.17g\t%.17g\t%.17g\n"):format(data.name, data.avg, data.min, data.max, data.sd / data.avg, data.sd))
   end
   out:close()
 

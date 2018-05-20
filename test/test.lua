@@ -109,3 +109,5 @@ out:close()
 
 local results2 = assert(assert(loadfile "test.dat")())
 assert(equal(results, results2))
+
+ubench.report(results, "test.dir")
