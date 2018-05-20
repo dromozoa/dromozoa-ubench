@@ -15,65 +15,50 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local function linest1(Y, X)
+return function (Y, X, b)
   local sum_x = 0
-  local sum_y = 0
   local sum_xx = 0
   local sum_xy = 0
   local n = #Y
-
-  if X then
-    for i = 1, n do
-      local x = X[i]
-      local y = Y[i]
-      sum_x = sum_x + x
-      sum_y = sum_y + y
-      sum_xx = sum_xx + x * x
-      sum_xy = sum_xy + x * y
-    end
-  else
-    for x = 1, n do
-      local y = Y[x]
-      sum_x = sum_x + x
-      sum_y = sum_y + y
-      sum_xx = sum_xx + x * x
-      sum_xy = sum_xy + x * y
-    end
-  end
-
-  local d = n * sum_xx - sum_x * sum_x
-  return (n * sum_xy - sum_x * sum_y) / d, (sum_y * sum_xx - sum_x * sum_xy) / d
-end
-
-local function linest1k(Y, X, b)
-  local sum_x = 0
-  local sum_xx = 0
-  local sum_xy = 0
-
-  if X then
-    for i = 1, #Y do
-      local x = X[i]
-      local y = Y[i]
-      sum_x = sum_x + x
-      sum_xx = sum_xx + x * x
-      sum_xy = sum_xy + x * y
-    end
-  else
-    for x = 1, #Y do
-      local y = Y[x]
-      sum_x = sum_x + x
-      sum_xx = sum_xx + x * x
-      sum_xy = sum_xy + x * y
-    end
-  end
-
-  return (sum_xy - b * sum_x) / sum_xx, b
-end
-
-return function (Y, X, b)
   if b then
-    return linest1k(Y, X, b)
+    if X then
+      for i = 1, n do
+        local x = X[i]
+        local y = Y[i]
+        sum_x = sum_x + x
+        sum_xx = sum_xx + x * x
+        sum_xy = sum_xy + x * y
+      end
+    else
+      for x = 1, n do
+        local y = Y[x]
+        sum_x = sum_x + x
+        sum_xx = sum_xx + x * x
+        sum_xy = sum_xy + x * y
+      end
+    end
+    return (sum_xy - b * sum_x) / sum_xx, b
   else
-    return linest1(Y, X)
+    local sum_y = 0
+    if X then
+      for i = 1, n do
+        local x = X[i]
+        local y = Y[i]
+        sum_x = sum_x + x
+        sum_y = sum_y + y
+        sum_xx = sum_xx + x * x
+        sum_xy = sum_xy + x * y
+      end
+    else
+      for x = 1, n do
+        local y = Y[x]
+        sum_x = sum_x + x
+        sum_y = sum_y + y
+        sum_xx = sum_xx + x * x
+        sum_xy = sum_xy + x * y
+      end
+    end
+    local d = n * sum_xx - sum_x * sum_x
+    return (n * sum_xy - sum_x * sum_y) / d, (sum_y * sum_xx - sum_x * sum_xy) / d
   end
 end
