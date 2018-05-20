@@ -15,5 +15,67 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-return function ()
+local unix = require "dromozoa.unix"
+
+local unpack = table.unpack or unpack
+
+local function run(n, f, context, ...)
+  local timer = unix.timer()
+
+  collectgarbage()
+  collectgarbage()
+
+  timer:start()
+  for i = 1, n do
+    context = f(context, ...)
+  end
+  timer:stop()
+
+  return timer:elapsed()
+end
+
+local function estimate(t, f, context, ...)
+  local a = t * 0.99
+  local b = t * 1.01
+  local n = 1
+  while true do
+    local elapsed = run(n, f, context, ...)
+    if a <= elapsed and elapsed < b then
+      return n
+    end
+    local m = n * t / elapsed
+    if m < 1 then
+      m = 1
+    end
+    -- TODO no local?
+    local m = m - m % 1
+    if n == m then
+      return n
+    end
+    n = m
+  end
+end
+
+return function (T, N, benchmarks)
+  local results = {}
+  for i = 1, #benchmarks do
+    -- { name, f, context, ... }
+    local benchmark = benchmarks[i]
+    results[i] = {
+      name = benchmark[1];
+      iteration = estimate(T, unpack(benchmark, 2, benchmark.n));
+    }
+  end
+  for i = 1, N do
+    io.stderr:write("\r", i, "/", N)
+    -- 16384?
+    assert(unix.reserve_stack_pages(8192))
+    for j = 1, #benchmarks do
+      local benchmark = benchmarks[j]
+      local result = results[j]
+      result[i] = run(result.iteration, unpack(benchmark, 2, benchmark.n))
+    end
+  end
+  io.stderr:write "\n"
+  return results
 end
