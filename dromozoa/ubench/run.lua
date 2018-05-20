@@ -46,9 +46,9 @@ local function estimate(t, f, context, ...)
     local m = n * t / elapsed
     if m < 1 then
       m = 1
+    else
+      m = m - m %1
     end
-    -- TODO no local?
-    local m = m - m % 1
     if n == m then
       return n
     end
@@ -58,6 +58,11 @@ end
 
 return function (T, N, benchmarks)
   local results = {}
+  if jit then
+    results.version = jit.version
+  else
+    results.version = _VERSION
+  end
   for i = 1, #benchmarks do
     -- { name, f, context, ... }
     local benchmark = benchmarks[i]
@@ -68,8 +73,7 @@ return function (T, N, benchmarks)
   end
   for i = 1, N do
     io.stderr:write("\r", i, "/", N)
-    -- 16384?
-    assert(unix.reserve_stack_pages(8192))
+    unix.reserve_stack_pages(8192) -- PTHREAD_STACK_MIN / 2
     for j = 1, #benchmarks do
       local benchmark = benchmarks[j]
       local result = results[j]

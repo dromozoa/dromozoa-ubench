@@ -17,49 +17,97 @@
 
 local ubench = require "dromozoa.ubench"
 
-local linest = ubench.linest
-local max = ubench.max
-local min = ubench.min
-local stdev = ubench.stdev
+local verbose = os.getenv "VERBOSE" == "1"
 
-local function assert_number(actual, expected)
-  local epsilon = 0.000001
-  assert(expected - epsilon < actual)
-  assert(actual < expected + epsilon)
+local function fibonacci(n)
+  if n < 2 then
+    return n
+  else
+    return fibonacci(n - 2) + fibonacci(n - 1)
+  end
 end
 
-local Y = { 0.01, 0.97, 2.02, 2.99, 4.03 }
-local X = { 0, 2, 4, 6, 8 }
+local function tarai(x, y, z)
+  if x <= y then
+    return y
+  else
+    return tarai(tarai(x - 1, y, z), tarai(y - 1, z, x), tarai(z - 1, x, y))
+  end
+end
 
-local a, b = linest(Y, X)
-assert_number(a, 0.503)
-assert_number(b, -0.008)
+local epsilon = 0.000001
 
-local a, b = linest(Y)
-assert_number(a, 1.006)
-assert_number(b, -1.014)
+local function equal(a, b)
+  if a == b then
+    return true
+  else
+    local ta = type(a)
+    local tb = type(b)
+    if ta == "number" and tb == "number" then
+      return a - epsilon < b and b < a + epsilon
+    elseif ta == "table" and tb == "table" then
+      for k, u in pairs(a) do
+        local v = b[k]
+        if v == nil or not equal(u, v) then
+          return false
+        end
+      end
+      for k in pairs(b) do
+        if a[k] == nil then
+          return false
+        end
+      end
+      return true
+    else
+      return false
+    end
+  end
+end
 
-local a, b = linest(Y, X, 0)
-assert_number(a, 0.50166667)
-assert_number(b, 0)
+local T = 0.001
+local N = 1000
 
-local a, b = linest(Y, nil, 0)
-assert_number(a, 0.72945455)
-assert_number(b, 0)
+local benchmarks = {}
+for i = 4, 7 do
+  benchmarks[#benchmarks + 1] = { ("fibonacci(%d)"):format(i), function (context, n) return context + fibonacci(n) end, 0, i }
+end
+for i = 4, 7 do
+  benchmarks[#benchmarks + 1] = { ("tarai(%2d,%d,%d)"):format(i * 2, i, i), function (context, x, y, z) return context + tarai(x, y, z)  end, 0, i * 2, i, i }
+end
 
-local V = { 0.85, 0.9, 1, 1.1, 1.15 }
+local context = ubench.context()
+context:initialize()
+local results = ubench.run(T, N, benchmarks)
+context:terminate()
 
-assert_number(max(V, 1, #V), 1.15)
-assert_number(min(V, 1, #V), 0.85)
+assert(#results == #benchmarks)
+assert(results.version)
+if verbose then
+  io.stderr:write(results.version, "\n")
+  io.stderr:write [[
+Name          | Iteration | Average | Minimum | Maximum
+--------------|-----------|---------|---------|--------
+]]
+end
+for i = 1, #results do
+  local result = results[i]
+  assert(result.name == benchmarks[i][1])
+  assert(result.iteration)
+  assert(#result == N)
+  local x = 1000000 / result.iteration
+  local sd, avg = ubench.stdev(result, 1, N)
+  local min = ubench.min(result, 1, N)
+  local max = ubench.max(result, 1, N)
+  if verbose then
+    io.stderr:write(("%-13s | %9d | %7.3f | %7.3f | %7.3f\n"):format(result.name, result.iteration, avg * x, min * x, max * x))
+  end
+end
 
-local s, a = stdev(V, 1, #V)
-assert_number(s, 0.12747579)
-assert_number(a, 1)
+local out = assert(io.open("test.dat", "w"))
+ubench.dump(out, results)
+out:close()
 
-local s, a = stdev.s(V, 1, #V)
-assert_number(s, 0.12747579)
-assert_number(a, 1)
+local results2 = assert(assert(loadfile "test.dat")())
+assert(equal(results, results2))
 
-local s, a = stdev.p(V, 1, #V)
-assert_number(s, 0.11401754)
-assert_number(a, 1)
+ubench.report(results, "test.dir")

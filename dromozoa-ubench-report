@@ -17,40 +17,28 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local read_file = require "dromozoa.commons.read_file"
-local uint32 = require "dromozoa.commons.uint32"
-local json = require "dromozoa.commons.json"
-local unix = require "dromozoa.unix"
 local ubench = require "dromozoa.ubench"
 
-for i = 1, #arg do
-  local filename = arg[i]
-  local dir = assert(filename:match("^(.+)%.json$"))
-  local result, message, code = unix.mkdir(dir)
-  if not result then
-    if code == unix.EEXIST then
-      if uint32.band(unix.stat(dir).st_mode, unix.S_IFMT) ~= unix.S_IFDIR then
-        error(unix.strerror(unix.ENOTDIR))
-      end
-    else
-      error(message)
-    end
-  end
-  local dataset = ubench.report(json.decode(assert(read_file(filename))), dir)
+local filename, dir = ...
 
-  dataset:sort(function (a, b)
-    return a.key < b.key
-  end)
+local results = assert(assert(loadfile(filename))())
+local dataset = ubench.report(results, dir)
 
-  local max = 0
-  for data in dataset:each() do
-    local n = #data.key
-    if max < n then
-      max = n
-    end
+local version_max = 0
+local name_max = 0
+
+for i = 1, #dataset do
+  local data = dataset[i]
+  if version_max < #data.version then
+    version_max = #data.version
   end
-  local f = "%" .. max .. "s %9d\n"
-  for data in dataset:each() do
-    io.write(f:format(data.key, math.floor(data.avg + 0.5)))
+  if name_max < #data.name then
+    name_max = #data.name
   end
+end
+
+local format = "%-" .. version_max .. "s | %-" .. name_max .. "s | %10.3f\n"
+for i = 1, #dataset do
+  local data = dataset[i]
+  io.write(format:format(data.version, data.name, data.avg))
 end

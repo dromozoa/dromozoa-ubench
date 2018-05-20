@@ -24,3 +24,5 @@ do
     *) "$@" "$i";;
   esac
 done
+
+rm -fr test.dat test.dir
