@@ -17,6 +17,8 @@
 
 local ubench = require "dromozoa.ubench"
 
+local verbose = os.getenv "VERBOSE" == "1"
+
 local function fibonacci(n)
   if n < 2 then
     return n
@@ -33,8 +35,33 @@ local function tarai(x, y, z)
   end
 end
 
-local results = ubench.run(0.001, 1000, {
+local T = 0.001
+local N = 1000
+
+local benchmarks = {
   { "fibonacci(2)", function (context, n) return context + fibonacci(n) end, 0, 2 };
   { "fibonacci(3)", function (context, n) return context + fibonacci(n) end, 0, 3 };
   { "fibonacci(4)", function (context, n) return context + fibonacci(n) end, 0, 4 };
-})
+}
+
+local context = ubench.context()
+context:initialize()
+local results = ubench.run(T, N, benchmarks)
+context:terminate()
+
+assert(#results == 3)
+for i = 1, #results do
+  local result = results[i]
+  assert(result.name == benchmarks[i][1])
+  assert(result.iteration)
+  assert(#result == N)
+  local x = 1000000 / result.iteration
+  local sd, avg = ubench.stdev(result, 1, N)
+  local min = ubench.min(result, 1, N)
+  local max = ubench.max(result, 1, N)
+  if verbose then
+    io.stderr:write(("%s | %7.3f | %7.3f | %7.3f\n"):format(result.name, avg * x, min * x, max * x))
+  end
+end
+
+
