@@ -50,14 +50,14 @@ local V = { 0.85, 0.9, 1, 1.1, 1.15 }
 assert_number(max(V, 1, #V), 1.15)
 assert_number(min(V, 1, #V), 0.85)
 
-local s, a = stdev(V)
+local s, a = stdev(V, 1, #V)
 assert_number(s, 0.12747579)
 assert_number(a, 1)
 
-local s, a = stdev.s(V)
+local s, a = stdev.s(V, 1, #V)
 assert_number(s, 0.12747579)
 assert_number(a, 1)
 
-local s, a = stdev.p(V)
+local s, a = stdev.p(V, 1, #V)
 assert_number(s, 0.11401754)
 assert_number(a, 1)
