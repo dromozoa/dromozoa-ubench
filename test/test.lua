@@ -15,10 +15,12 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local linest = require "dromozoa.ubench.linest"
-local max = require "dromozoa.ubench.max"
-local min = require "dromozoa.ubench.min"
-local stdev = require "dromozoa.ubench.stdev"
+local ubench = require "dromozoa.ubench"
+
+local linest = ubench.linest
+local max = ubench.max
+local min = ubench.min
+local stdev = ubench.stdev
 
 local function assert_number(actual, expected)
   local epsilon = 0.000001

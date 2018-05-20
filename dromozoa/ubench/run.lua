@@ -1,6 +1,4 @@
-#! /usr/bin/env lua
-
--- Copyright (C) 2015,2017,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -17,25 +15,5 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local ubench = require "dromozoa.ubench"
-
-local benchmarks = assert(assert(loadfile((...)))())
-
-local context = ubench.context()
-context:initialize()
--- estimate
--- run
-context:terminate()
--- write
-
---[[
-local format = string.format
-
-local b = ubench()
-b.benchmarks = assert(loadfile(arg[1]))()
-
-local context = ubench.initialize()
-local results = b:run()
-context:terminate()
-io.write(json.encode(results, { pretty = true }), "\n")
-]]
+return function ()
+end

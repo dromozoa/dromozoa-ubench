@@ -15,6 +15,16 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
+return {
+  context = require "dromozoa.ubench.context";
+  linest = require "dromozoa.ubench.linest";
+  max = require "dromozoa.ubench.max";
+  min = require "dromozoa.ubench.min";
+  run = require "dromozoa.ubench.run";
+  stdev = require "dromozoa.ubench.stdev";
+}
+
+--[[
 local linked_hash_table = require "dromozoa.commons.linked_hash_table"
 local pairs = require "dromozoa.commons.pairs"
 local pack = require "dromozoa.commons.pack"
@@ -115,3 +125,4 @@ return setmetatable(class, {
     return setmetatable(class.new(), class.metatable)
   end;
 })
+]]
