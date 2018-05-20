@@ -39,9 +39,12 @@ local T = 0.001
 local N = 1000
 
 local benchmarks = {
+  { "fibonacci(1)", function (context, n) return context + fibonacci(n) end, 0, 1 };
   { "fibonacci(2)", function (context, n) return context + fibonacci(n) end, 0, 2 };
   { "fibonacci(3)", function (context, n) return context + fibonacci(n) end, 0, 3 };
   { "fibonacci(4)", function (context, n) return context + fibonacci(n) end, 0, 4 };
+  { "fibonacci(5)", function (context, n) return context + fibonacci(n) end, 0, 5 };
+  { "fibonacci(6)", function (context, n) return context + fibonacci(n) end, 0, 6 };
 }
 
 local context = ubench.context()
@@ -49,7 +52,7 @@ context:initialize()
 local results = ubench.run(T, N, benchmarks)
 context:terminate()
 
-assert(#results == 3)
+assert(#results == #benchmarks)
 for i = 1, #results do
   local result = results[i]
   assert(result.name == benchmarks[i][1])
