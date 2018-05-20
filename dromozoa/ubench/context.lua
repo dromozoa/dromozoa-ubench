@@ -27,7 +27,7 @@ function class:initialize()
   local scaling_governor
   local handle = io.open(scaling_governor_filename)
   if handle then
-    scaling_governor = handle.read "*l"
+    scaling_governor = handle:read "*l"
     handle:close()
   else
     io.stderr:write "scaling_governor not supported\n"
