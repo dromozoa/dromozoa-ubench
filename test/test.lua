@@ -33,20 +33,12 @@ local a, b = linest(Y, X)
 assert_number(a, 0.503)
 assert_number(b, -0.008)
 
-local a, b = linest(Y, {})
-assert_number(a, 1.006)
-assert_number(b, -1.014)
-
 local a, b = linest(Y)
 assert_number(a, 1.006)
 assert_number(b, -1.014)
 
 local a, b = linest(Y, X, 0)
 assert_number(a, 0.50166667)
-assert_number(b, 0)
-
-local a, b = linest(Y, {}, 0)
-assert_number(a, 0.72945455)
 assert_number(b, 0)
 
 local a, b = linest(Y, nil, 0)

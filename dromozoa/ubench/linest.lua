@@ -22,18 +22,18 @@ local function linest1(Y, X)
   local sum_xy = 0
   local n = #Y
 
-  if not X or next(X) == nil then
-    for x = 1, n do
-      local y = Y[x]
+  if X then
+    for i = 1, n do
+      local x = X[i]
+      local y = Y[i]
       sum_x = sum_x + x
       sum_y = sum_y + y
       sum_xx = sum_xx + x * x
       sum_xy = sum_xy + x * y
     end
   else
-    for i = 1, n do
-      local x = X[i]
-      local y = Y[i]
+    for x = 1, n do
+      local y = Y[x]
       sum_x = sum_x + x
       sum_y = sum_y + y
       sum_xx = sum_xx + x * x
@@ -50,17 +50,17 @@ local function linest1k(Y, X, b)
   local sum_xx = 0
   local sum_xy = 0
 
-  if not X or next(X) == nil then
-    for x = 1, #Y do
-      local y = Y[x]
+  if X then
+    for i = 1, #Y do
+      local x = X[i]
+      local y = Y[i]
       sum_x = sum_x + x
       sum_xx = sum_xx + x * x
       sum_xy = sum_xy + x * y
     end
   else
-    for i = 1, #Y do
-      local x = X[i]
-      local y = Y[i]
+    for x = 1, #Y do
+      local y = Y[x]
       sum_x = sum_x + x
       sum_xx = sum_xx + x * x
       sum_xy = sum_xy + x * y
@@ -71,9 +71,9 @@ local function linest1k(Y, X, b)
 end
 
 return function (Y, X, b)
-  if b == nil then
-    return linest1(Y, X)
-  else
+  if b then
     return linest1k(Y, X, b)
+  else
+    return linest1(Y, X)
   end
 end
