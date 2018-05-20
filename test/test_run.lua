@@ -38,14 +38,13 @@ end
 local T = 0.001
 local N = 1000
 
-local benchmarks = {
-  { "fibonacci(1)", function (context, n) return context + fibonacci(n) end, 0, 1 };
-  { "fibonacci(2)", function (context, n) return context + fibonacci(n) end, 0, 2 };
-  { "fibonacci(3)", function (context, n) return context + fibonacci(n) end, 0, 3 };
-  { "fibonacci(4)", function (context, n) return context + fibonacci(n) end, 0, 4 };
-  { "fibonacci(5)", function (context, n) return context + fibonacci(n) end, 0, 5 };
-  { "fibonacci(6)", function (context, n) return context + fibonacci(n) end, 0, 6 };
-}
+local benchmarks = {}
+for i = 4, 7 do
+  benchmarks[#benchmarks + 1] = { ("fibonacci(%d)"):format(i), function (context, n) return context + fibonacci(n) end, 0, i }
+end
+for i = 4, 7 do
+  benchmarks[#benchmarks + 1] = { ("tarai(%2d,%d,%d)"):format(i * 2, i, i), function (context, x, y, z) return context + tarai(x, y, z)  end, 0, i * 2, i, i }
+end
 
 local context = ubench.context()
 context:initialize()
@@ -63,6 +62,6 @@ for i = 1, #results do
   local min = ubench.min(result, 1, N)
   local max = ubench.max(result, 1, N)
   if verbose then
-    io.stderr:write(("%s | %7.3f | %7.3f | %7.3f\n"):format(result.name, avg * x, min * x, max * x))
+    io.stderr:write(("%-13s | %4d | %7.3f | %7.3f | %7.3f\n"):format(result.name, result.iteration, avg * x, min * x, max * x))
   end
 end
