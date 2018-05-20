@@ -17,21 +17,10 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local unix = require "dromozoa.unix"
+local context = require "dromozoa.ubench.context"
 
-local scaling_governor_filename = "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor"
-local scaling_governor
+local verbose = os.getenv "VERBOSE" == "1"
 
-local handle, message = io.open(scaling_governor_filename)
-if handle then
-  scaling_governor = handle:read "*l"
-  handle:close()
-  io.stderr:write("scaling_governor: ", scaling_governor, "\n")
-else
-  io.stderr:write(message, "\n")
-end
-
-
-
-
-
+local ctx = context()
+ctx:initialize()
+ctx:terminate()
