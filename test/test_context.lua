@@ -47,7 +47,7 @@ if verbose then
  Name            | Value
 -----------------|-----------------
 ]]
-  dump(context, "scaling_govener")
+  dump(context, "scaling_governor")
   dump(context, "affinity")
   dump(context, "scheduler")
   dump(context, "param")
