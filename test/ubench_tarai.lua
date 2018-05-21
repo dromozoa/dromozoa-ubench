@@ -1,4 +1,4 @@
--- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -15,22 +15,16 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local loadstring = loadstring or load
-
-local B = {}
-
-for i = 0, 32 do
-  local code = {}
-  code[#code + 1] = [[
-return function ()
-  local out
-  local n1, n2 = 1, 2
-]]
-  for j = 1, i do
-    code[#code + 1] = "  out = n1 + n2\n"
+local function tarai(x, y, z)
+  if x <= y then
+    return y
+  else
+    return tarai(tarai(x - 1, y, z), tarai(y - 1, z, x), tarai(z - 1, x, y))
   end
-  code[#code + 1] = "end\n"
-  B[#B + 1] = { "ADD/" .. i, assert(loadstring(table.concat(code)))() }
 end
 
-return B
+return {
+  { "tarai( 4,2,1)", function (context, x, y, z) return context + tarai(x, y, z) end, 0,  4, 2, 1 };
+  { "tarai( 8,4,2)", function (context, x, y, z) return context + tarai(x, y, z) end, 0,  8, 4, 2 };
+  { "tarai(12,6,3)", function (context, x, y, z) return context + tarai(x, y, z) end, 0, 12, 8, 3 };
+}

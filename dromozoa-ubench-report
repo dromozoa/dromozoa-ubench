@@ -1,6 +1,6 @@
 #! /usr/bin/env lua
 
--- Copyright (C) 2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2015,2017,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -17,40 +17,70 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local read_file = require "dromozoa.commons.read_file"
-local uint32 = require "dromozoa.commons.uint32"
-local json = require "dromozoa.commons.json"
-local unix = require "dromozoa.unix"
 local ubench = require "dromozoa.ubench"
 
-for i = 1, #arg do
-  local filename = arg[i]
-  local dir = assert(filename:match("^(.+)%.json$"))
-  local result, message, code = unix.mkdir(dir)
-  if not result then
-    if code == unix.EEXIST then
-      if uint32.band(unix.stat(dir).st_mode, unix.S_IFMT) ~= unix.S_IFDIR then
-        error(unix.strerror(unix.ENOTDIR))
-      end
-    else
-      error(message)
+local unpack = table.unpack or unpack
+
+local dir = ...
+
+local results = {}
+for i = 2, #arg do
+  assert(assert(assert(loadfile(arg[i]))())(results))
+end
+
+local dataset = ubench.report(results, dir)
+
+local version_max = 0
+local name_max = 0
+
+local versions = {}
+local version_set = {}
+local names = {}
+local name_set = {}
+local rows = {}
+
+for i = 1, #dataset do
+  local data = dataset[i]
+  local version = data.version
+  local x = version_set[version] 
+  if not x then
+    x = #versions + 1
+    versions[x] = version
+    version_set[version] = x
+  end
+  local name = data.name
+  local y = name_set[name]
+  if not y then
+    y = #names + 1
+    names[y] = name
+    name_set[name] = y
+  end
+  local row = rows[y]
+  if not row then
+    row = { name = name }
+    rows[y] = row
+  end
+  row[x] = ("%.3f"):format(data.avg)
+end
+
+local name_max = 0
+for i = 1, #names do
+  local name = names[i]
+  if name_max < #name then
+    name_max = #name
+  end
+end
+local n = #versions
+local format = "%-" .. name_max .. "s" .. (" | %12s"):rep(n) .. "\n"
+
+io.write(format:format("", unpack(versions, 1, n)))
+io.write(("-"):rep(name_max), ("-|-------------"):rep(n), "\n")
+for y = 1, #rows do
+  local row = rows[y]
+  for x = 1, n do
+    if not row[x] then
+      row[x] = ""
     end
   end
-  local dataset = ubench.report(json.decode(assert(read_file(filename))), dir)
-
-  dataset:sort(function (a, b)
-    return a.key < b.key
-  end)
-
-  local max = 0
-  for data in dataset:each() do
-    local n = #data.key
-    if max < n then
-      max = n
-    end
-  end
-  local f = "%" .. max .. "s %9d\n"
-  for data in dataset:each() do
-    io.write(f:format(data.key, math.floor(data.avg + 0.5)))
-  end
+  io.write(format:format(row.name, unpack(row, 1, n)))
 end

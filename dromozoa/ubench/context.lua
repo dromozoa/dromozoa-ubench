@@ -1,4 +1,4 @@
--- Copyright (C) 2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2017,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -15,29 +15,31 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local read_file = require "dromozoa.commons.read_file"
-local uint32 = require "dromozoa.commons.uint32"
-local write_file = require "dromozoa.commons.write_file"
 local unix = require "dromozoa.unix"
 
 local scaling_governor_filename = "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor"
 
 local class = {}
 
-function class.new()
-  return {}
-end
-
 function class:initialize()
   local pid = assert(unix.getpid())
 
-  local scaling_governor = read_file(scaling_governor_filename)
-  if scaling_governor ~= nil and scaling_governor ~= "performance" then
-    local result, message = write_file(scaling_governor_filename, "performance")
-    if result then
+  local scaling_governor
+  local handle = io.open(scaling_governor_filename)
+  if handle then
+    scaling_governor = handle:read "*l"
+    handle:close()
+  else
+    io.stderr:write "scaling_governor not supported\n"
+  end
+  if scaling_governor and scaling_governor ~= "performance" then
+    local out, message = io.open(scaling_governor_filename, "w")
+    if out then
+      out:write "performance"
+      out:close()
       self.scaling_governor = scaling_governor
     else
-      io.stderr:write("could not write_file: ", message, "\n")
+      io.stderr:write("io.open failed: ", message, "\n")
     end
   end
 
@@ -47,8 +49,10 @@ function class:initialize()
     if result then
       self.affinity = affinity
     else
-      io.stderr:write("could not sched_setaffinity: ", message, "\n")
+      io.stderr:write("sched_setaffinity failed: ", message, "\n")
     end
+  else
+    io.stderr:write "sched_setaffinity not supported\n"
   end
 
   if unix.sched_setscheduler then
@@ -61,17 +65,17 @@ function class:initialize()
       self.scheduler = scheduler
       self.param = param
     else
-      io.stderr:write("could not sched_setscheduler: ", message, "\n")
+      io.stderr:write("sched_setscheduler failed: ", message, "\n")
     end
+  else
+    io.stderr:write "sched_setscheduler not supported\n"
   end
 
-  if unix.mlockall then
-    local result, message = unix.mlockall(uint32.bor(unix.MCL_CURRENT, unix.MCL_FUTURE))
-    if result then
-      self.mlockall = true
-    else
-      io.stderr:write("could not mlockall: ", message, "\n")
-    end
+  local result, message = unix.mlockall(unix.bor(unix.MCL_CURRENT, unix.MCL_FUTURE))
+  if result then
+    self.mlockall = true
+  else
+    io.stderr:write("mlockall failed: ", message, "\n")
   end
 
   return self
@@ -80,8 +84,11 @@ end
 function class:terminate()
   local pid = assert(unix.getpid())
 
-  if self.scaling_governor then
-    assert(write_file(scaling_governor_filename, self.scaling_governor))
+  local scaling_governor = self.scaling_governor
+  if scaling_governor then
+    local out = assert(io.open(scaling_governor_filename, "w"))
+    out:write(scaling_governor)
+    out:close()
     self.scaling_governor = nil
   end
 
@@ -110,6 +117,6 @@ class.metatable = {
 
 return setmetatable(class, {
   __call = function ()
-    return setmetatable(class.new(), class.metatable)
+    return setmetatable({}, class.metatable)
   end;
 })
