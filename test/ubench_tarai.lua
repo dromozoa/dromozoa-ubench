@@ -1,6 +1,4 @@
-#! /usr/bin/env lua
-
--- Copyright (C) 2015,2017,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-ubench.
 --
@@ -17,32 +15,16 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-local ubench = require "dromozoa.ubench"
-
-local dir = ...
-
-local results = {}
-for i = 2, #arg do
-  assert(assert(assert(loadfile(arg[i]))())(results))
-end
-
-local dataset = ubench.report(results, dir)
-
-local version_max = 0
-local name_max = 0
-
-for i = 1, #dataset do
-  local data = dataset[i]
-  if version_max < #data.version then
-    version_max = #data.version
-  end
-  if name_max < #data.name then
-    name_max = #data.name
+local function tarai(x, y, z)
+  if x <= y then
+    return y
+  else
+    return tarai(tarai(x - 1, y, z), tarai(y - 1, z, x), tarai(z - 1, x, y))
   end
 end
 
-local format = "%-" .. version_max .. "s | %-" .. name_max .. "s | %10.3f\n"
-for i = 1, #dataset do
-  local data = dataset[i]
-  io.write(format:format(data.version, data.name, data.avg))
-end
+return {
+  { "tarai( 4,2,1)", function (context, x, y, z) return context + tarai(x, y, z) end, 0,  4, 2, 1 };
+  { "tarai( 8,4,2)", function (context, x, y, z) return context + tarai(x, y, z) end, 0,  8, 4, 2 };
+  { "tarai(12,6,3)", function (context, x, y, z) return context + tarai(x, y, z) end, 0, 12, 8, 3 };
+}
