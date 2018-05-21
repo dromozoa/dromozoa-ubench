@@ -19,9 +19,14 @@
 
 local ubench = require "dromozoa.ubench"
 
-local filename, dir = ...
+local dir = ...
 
-local results = assert(assert(loadfile(filename))())
+local results = {}
+for i = 2, #arg do
+  local filename = arg[i]
+  assert(assert(assert(loadfile(filename))())(results))
+end
+
 local dataset = ubench.report(results, dir)
 
 local version_max = 0

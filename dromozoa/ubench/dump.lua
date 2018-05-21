@@ -17,12 +17,12 @@
 
 return function (out, results)
   out:write(([[
-return {
+return function (results)
 ]]):format(results.version))
   for i = 1, #results do
     local result = results[i]
     out:write(([[
-  {
+  results[#results + 1] = {
     version = %q;
     name = %q;
     iteration = %d;
@@ -32,5 +32,8 @@ return {
     end
     out:write "  };\n"
   end
-  out:write "}\n"
+  out:write [[
+  return results
+end
+]]
 end

@@ -84,7 +84,7 @@ local out = assert(io.open("test.dat", "w"))
 ubench.dump(out, results)
 out:close()
 
-local results2 = assert(assert(loadfile "test.dat")())
+local results2 = assert(assert(assert(loadfile "test.dat")())({}))
 assert(equal(results, results2))
 
 ubench.report(results, "test.dir")
