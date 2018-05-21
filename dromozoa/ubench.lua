@@ -15,13 +15,30 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-return {
-  context = require "dromozoa.ubench.context";
-  dump = require "dromozoa.ubench.dump";
+local context = require "dromozoa.ubench.context"
+local dump = require "dromozoa.ubench.dump"
+local run = require "dromozoa.ubench.run"
+
+local class = {
+  context = context;
+  dump = dump;
   linest = require "dromozoa.ubench.linest";
   max = require "dromozoa.ubench.max";
   min = require "dromozoa.ubench.min";
-  run = require "dromozoa.ubench.run";
+  run = run;
   report = require "dromozoa.ubench.report";
   stdev = require "dromozoa.ubench.stdev";
 }
+
+return setmetatable(class, {
+  __call = function (_, T, N, benchmarks_filename, results_filename)
+    local benchmarks = assert(assert(loadfile(benchmarks_filename))())
+    local ctx = context()
+    ctx:initialize()
+    local results = run(T, N, benchmarks)
+    ctx:terminate()
+    local out = assert(io.open(results_filename, "w"))
+    dump(out, results)
+    out:close()
+  end;
+})

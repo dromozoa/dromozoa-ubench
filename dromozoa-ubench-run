@@ -19,18 +19,4 @@
 
 local ubench = require "dromozoa.ubench"
 
-local benchmarks_filename, results_filename = ...
-
-local T = 0.001
-local N = 1000
-
-local benchmarks = assert(assert(loadfile(benchmarks_filename))())
-
-local context = ubench.context()
-context:initialize()
-local results = ubench.run(T, N, benchmarks)
-context:terminate()
-
-local out = assert(io.open(results_filename, "w"))
-ubench.dump(out, results)
-out:close()
+ubench(0.001, 1000, ...)
