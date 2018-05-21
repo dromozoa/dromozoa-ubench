@@ -44,6 +44,7 @@ dir=`dromozoa_basename "$benchmarks_filename"`
 dir=`expr "X$dir" : 'Xubench\(_.*\)' '|' "X$dir" | sed -e 's/^.//'`
 dir=`expr "X$dir" : '\(X.*\)\.' '|' "X$dir" | sed -e 's/^.//'`
 
+mkdir -p "$dir"
 rm -f "$dir/"results-*.dat
 
 i=0

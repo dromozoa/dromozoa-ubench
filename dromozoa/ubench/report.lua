@@ -20,9 +20,8 @@ local max = require "dromozoa.ubench.max"
 local min = require "dromozoa.ubench.min"
 local stdev = require "dromozoa.ubench.stdev"
 
-local result, message = pcall(require, "dromozoa.png")
+local result, png = pcall(require, "dromozoa.png")
 if result then
-  local png = message
   write_png = function (filename, samples, height)
     local width = #samples
 
@@ -65,7 +64,6 @@ if result then
     out:close()
   end
 else
-  io.stderr:write("require failed: ", message, "\n")
   write_png = function () end
 end
 

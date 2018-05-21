@@ -70,7 +70,7 @@ return function (T, N, benchmarks)
       iteration = estimate(T, unpack(benchmark, 2, benchmark.n));
     }
   end
-  local format = "\r[ %" .. #tostring(N) .. "d / " .. N .. " ]"
+  local format = "\r" .. version .. " [ %" .. #tostring(N) .. "d / " .. N .. " ]"
   for i = 1, N do
     io.stderr:write(format:format(i))
     unix.reserve_stack_pages(8192) -- PTHREAD_STACK_MIN / 2
