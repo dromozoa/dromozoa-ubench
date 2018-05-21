@@ -20,6 +20,64 @@ local max = require "dromozoa.ubench.max"
 local min = require "dromozoa.ubench.min"
 local stdev = require "dromozoa.ubench.stdev"
 
+local png
+local result, message = pcall(require, "dromozoa.png")
+if result then
+  png = message
+end
+
+local write_png
+if png then
+  write_png = function (filename, samples, data)
+    local width = #samples
+    local height = 256
+
+    local rows = {}
+    for y = 1, height do
+      local row = {}
+      for x = 1, width do
+        row[x] = "\0"
+      end
+      rows[y] = row
+    end
+
+    local m = data.min
+    local n = data.max - m
+
+    for x = 1, width do
+      local u = (samples[x] - m) * height / n
+      local v = u % 1
+      u = u - v
+      for y = height - u + 1, height do
+        rows[y][x] = "\255"
+      end
+      if v ~= 0 then
+        rows[height - u][x] = string.char(math.floor(v * 255))
+      end
+    end
+
+    local writer = assert(png.writer())
+    local out = assert(io.open(filename, "wb"))
+    assert(writer:set_write_fn(function (data)
+      out:write(data)
+    end))
+    assert(writer:set_IHDR {
+      width = width;
+      height = height;
+      bit_depth = 8;
+      color_type = png.PNG_COLOR_TYPE_GRAY;
+    })
+    for y = 1, height do
+      assert(writer:set_row(y, table.concat(rows[y])))
+    end
+    assert(writer:write_png())
+
+    out:close()
+  end
+else
+  write_png = function () end
+end
+
 return function (results, dir)
   local result, message, code = unix.mkdir(dir)
   if not result then
@@ -45,7 +103,12 @@ return function (results, dir)
 
     -- write_png
     table.sort(samples)
+
     -- write_png
+    write_png(("%s/%04d.png"):format(dir, i), samples, {
+      min = min(samples, 1, #samples);
+      max = max(samples, 1, #samples);
+    })
 
     local n = #samples
     local m = n * 0.25
