@@ -64,15 +64,15 @@ return function (T, N, benchmarks)
     results.version = _VERSION
   end
   for i = 1, #benchmarks do
-    -- { name, f, context, ... }
     local benchmark = benchmarks[i]
     results[i] = {
       name = benchmark[1];
       iteration = estimate(T, unpack(benchmark, 2, benchmark.n));
     }
   end
+  local format = "\r%" .. #tostring(N) .. "d / " .. N
   for i = 1, N do
-    io.stderr:write("\r", i, "/", N)
+    io.stderr:write(format:format(i))
     unix.reserve_stack_pages(8192) -- PTHREAD_STACK_MIN / 2
     for j = 1, #benchmarks do
       local benchmark = benchmarks[j]
