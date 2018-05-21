@@ -80,29 +80,6 @@ context:initialize()
 local results = ubench.run(T, N, benchmarks)
 context:terminate()
 
-assert(#results == #benchmarks)
-assert(results.version)
-if verbose then
-  io.stderr:write(results.version, "\n")
-  io.stderr:write [[
-Name          | Iteration | Average | Minimum | Maximum
---------------|-----------|---------|---------|--------
-]]
-end
-for i = 1, #results do
-  local result = results[i]
-  assert(result.name == benchmarks[i][1])
-  assert(result.iteration)
-  assert(#result == N)
-  local x = 1000000 / result.iteration
-  local sd, avg = ubench.stdev(result, 1, N)
-  local min = ubench.min(result, 1, N)
-  local max = ubench.max(result, 1, N)
-  if verbose then
-    io.stderr:write(("%-13s | %9d | %7.3f | %7.3f | %7.3f\n"):format(result.name, result.iteration, avg * x, min * x, max * x))
-  end
-end
-
 local out = assert(io.open("test.dat", "w"))
 ubench.dump(out, results)
 out:close()
