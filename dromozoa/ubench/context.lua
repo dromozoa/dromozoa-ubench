@@ -39,7 +39,7 @@ function class:initialize()
       out:close()
       self.scaling_governor = scaling_governor
     else
-      io.stderr:write("could not io.open: ", message, "\n")
+      io.stderr:write("io.open failed: ", message, "\n")
     end
   end
 
@@ -49,7 +49,7 @@ function class:initialize()
     if result then
       self.affinity = affinity
     else
-      io.stderr:write("could not sched_setaffinity: ", message, "\n")
+      io.stderr:write("sched_setaffinity failed: ", message, "\n")
     end
   else
     io.stderr:write "sched_setaffinity not supported\n"
@@ -65,7 +65,7 @@ function class:initialize()
       self.scheduler = scheduler
       self.param = param
     else
-      io.stderr:write("could not sched_setscheduler: ", message, "\n")
+      io.stderr:write("sched_setscheduler failed: ", message, "\n")
     end
   else
     io.stderr:write "sched_setscheduler not supported\n"
@@ -75,7 +75,7 @@ function class:initialize()
   if result then
     self.mlockall = true
   else
-    io.stderr:write("could not mlockall: ", message, "\n")
+    io.stderr:write("mlockall failed: ", message, "\n")
   end
 
   return self
