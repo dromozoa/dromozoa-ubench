@@ -30,7 +30,6 @@ build = {
     bin = {
       ["dromozoa-ubench"] = "dromozoa-ubench";
       ["dromozoa-ubench-report"] = "dromozoa-ubench-report";
-      ["dromozoa-ubench-run"] = "dromozoa-ubench-run";
     };
   };
 }
