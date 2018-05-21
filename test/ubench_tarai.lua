@@ -15,25 +15,16 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-ubench.  If not, see <http://www.gnu.org/licenses/>.
 
-return function (out, results)
-  out:write(([[
-return function (results)
-]]):format(results.version))
-  for i = 1, #results do
-    local result = results[i]
-    out:write(([[
-  results[#results + 1] = {
-    version = %q;
-    name = %q;
-    iteration = %d;
-]]):format(result.version, result.name, result.iteration))
-    for j = 1, #result do
-      out:write(("    %.17g;\n"):format(result[j]))
-    end
-    out:write "  };\n"
+local function tarai(x, y, z)
+  if x <= y then
+    return y
+  else
+    return tarai(tarai(x - 1, y, z), tarai(y - 1, z, x), tarai(z - 1, x, y))
   end
-  out:write [[
-  return results
 end
-]]
-end
+
+return {
+  { "tarai( 4,2,1)", function (context, x, y, z) return context + tarai(x, y, z) end, 0,  4, 2, 1 };
+  { "tarai( 8,4,2)", function (context, x, y, z) return context + tarai(x, y, z) end, 0,  8, 4, 2 };
+  { "tarai(12,6,3)", function (context, x, y, z) return context + tarai(x, y, z) end, 0, 12, 8, 3 };
+}

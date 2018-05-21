@@ -20,12 +20,10 @@ local max = require "dromozoa.ubench.max"
 local min = require "dromozoa.ubench.min"
 local stdev = require "dromozoa.ubench.stdev"
 
-local result, message = pcall(require, "dromozoa.png")
+local result, png = pcall(require, "dromozoa.png")
 if result then
-  local png = message
-  write_png = function (filename, samples)
+  write_png = function (filename, samples, height)
     local width = #samples
-    local height = 256
 
     local rows = {}
     for y = 1, height do
@@ -40,12 +38,10 @@ if result then
     local b = max(samples, 1, width) - a
     for x = 1, width do
       local u = (samples[x] - a) * height / b
-      local v = u % 1
-      u = u - v
+      u = u - u % 1
       for y = 1, u do
         rows[y][x] = "\255"
       end
-      -- v to pixel
     end
 
     local writer = assert(png.writer())
@@ -68,7 +64,6 @@ if result then
     out:close()
   end
 else
-  io.stderr:write("require failed: ", message, "\n")
   write_png = function () end
 end
 
@@ -86,7 +81,6 @@ return function (results, dir)
 
   local dataset = {}
 
-  local version = results.version
   for i = 1, #results do
     local result = results[i]
     local iteration = result.iteration
@@ -99,8 +93,8 @@ return function (results, dir)
     end
     table.sort(samples2)
 
-    write_png(("%s/%04d-01.png"):format(dir, i), samples1)
-    write_png(("%s/%04d-02.png"):format(dir, i), samples2)
+    write_png(("%s/%04d-01.png"):format(dir, i), samples1, 256)
+    write_png(("%s/%04d-02.png"):format(dir, i), samples2, 256)
 
     local n = #result
     local a = n * 0.25
@@ -109,24 +103,17 @@ return function (results, dir)
     a = a + 1
 
     local data = {
-      version = version;
+      version = result.version;
       name = result.name;
       min = min(samples2, a, b);
       max = max(samples2, a, b);
     }
     data.sd, data.avg = stdev(samples2, a, b)
-
-    -- write_png
-    -- write_png(("%s/%04d.png"):format(dir, i), samples, {
-    --   min = min(samples, 1, #samples);
-    --   max = max(samples, 1, #samples);
-    -- })
-
     dataset[i] = data
   end
 
   local out = assert(io.open(("%s/report.txt"):format(dir), "w"))
-  out:write "key\tavg\tmin\tmax\tcv\tsd\n"
+  out:write "version\tname\tavg\tmin\tmax\tcv\tsd\n"
   for i = 1, #dataset do
     local data = dataset[i]
     out:write(("%s\t%s\t%.17g\t%.17g\t%.17g\t%.17g\t%.17g\n"):format(data.version, data.name, data.avg, data.min, data.max, data.sd / data.avg, data.sd))
