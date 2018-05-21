@@ -20,9 +20,10 @@ local max = require "dromozoa.ubench.max"
 local min = require "dromozoa.ubench.min"
 local stdev = require "dromozoa.ubench.stdev"
 
-local result, png = pcall(require, "dromozoa.png")
+local result, message = pcall(require, "dromozoa.png")
 if result then
-  write_png = function (filename, samples, data)
+  local png = message
+  write_png = function (filename, samples)
     local width = #samples
     local height = 256
 
@@ -35,19 +36,16 @@ if result then
       rows[y] = row
     end
 
-    local m = data.min
-    local n = data.max - m
-
+    local a = min(samples, 1, width)
+    local b = max(samples, 1, width) - a
     for x = 1, width do
-      local u = (samples[x] - m) * height / n
+      local u = (samples[x] - a) * height / b
       local v = u % 1
       u = u - v
-      for y = height - u + 1, height do
+      for y = 1, u do
         rows[y][x] = "\255"
       end
-      if v ~= 0 then
-        rows[height - u][x] = string.char(math.floor(v * 255))
-      end
+      -- v to pixel
     end
 
     local writer = assert(png.writer())
@@ -62,14 +60,15 @@ if result then
       color_type = png.PNG_COLOR_TYPE_GRAY;
     })
     for y = 1, height do
-      assert(writer:set_row(y, table.concat(rows[y])))
+      local i = height - y + 1
+      assert(writer:set_row(i, table.concat(rows[y])))
     end
     assert(writer:write_png())
 
     out:close()
   end
 else
-  io.stderr:write "could not require dromozoa.png\n"
+  io.stderr:write("require failed: ", message, "\n")
   write_png = function () end
 end
 
@@ -91,34 +90,37 @@ return function (results, dir)
   for i = 1, #results do
     local result = results[i]
     local iteration = result.iteration
-    local samples = {}
+    local samples1 = {}
+    local samples2 = {}
     for j = 1, #result do
-      samples[j] = result[j] * 1000000 / iteration
+      local sample = result[j] * 1000000 / iteration
+      samples1[j] = sample
+      samples2[j] = sample
     end
+    table.sort(samples2)
 
-    -- write_png
-    table.sort(samples)
+    write_png(("%s/%04d-01.png"):format(dir, i), samples1)
+    write_png(("%s/%04d-02.png"):format(dir, i), samples2)
 
-    -- write_png
-    write_png(("%s/%04d.png"):format(dir, i), samples, {
-      min = min(samples, 1, #samples);
-      max = max(samples, 1, #samples);
-    })
-
-    local n = #samples
-    local m = n * 0.25
-    m = m - m % 1
-
-    n = n - m
-    m = m + 1
+    local n = #result
+    local a = n * 0.25
+    a = a - a % 1
+    local b = n - a
+    a = a + 1
 
     local data = {
       version = version;
       name = result.name;
-      min = min(samples, m, n);
-      max = max(samples, m, n);
+      min = min(samples2, a, b);
+      max = max(samples2, a, b);
     }
-    data.sd, data.avg = stdev(samples, m, n)
+    data.sd, data.avg = stdev(samples2, a, b)
+
+    -- write_png
+    -- write_png(("%s/%04d.png"):format(dir, i), samples, {
+    --   min = min(samples, 1, #samples);
+    --   max = max(samples, 1, #samples);
+    -- })
 
     dataset[i] = data
   end
