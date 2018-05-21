@@ -18,15 +18,15 @@
 return function (out, results)
   out:write(([[
 return {
-  version = %q;
 ]]):format(results.version))
   for i = 1, #results do
     local result = results[i]
     out:write(([[
   {
+    version = %q;
     name = %q;
     iteration = %d;
-]]):format(result.name, result.iteration))
+]]):format(result.version, result.name, result.iteration))
     for j = 1, #result do
       out:write(("    %.17g;\n"):format(result[j]))
     end

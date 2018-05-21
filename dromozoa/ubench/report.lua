@@ -83,7 +83,6 @@ return function (results, dir)
 
   local dataset = {}
 
-  local version = results.version
   for i = 1, #results do
     local result = results[i]
     local iteration = result.iteration
@@ -106,7 +105,7 @@ return function (results, dir)
     a = a + 1
 
     local data = {
-      version = version;
+      version = result.version;
       name = result.name;
       min = min(samples2, a, b);
       max = max(samples2, a, b);
